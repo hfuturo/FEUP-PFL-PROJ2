@@ -1,3 +1,6 @@
+import Data.List (sort)
+import Data.List (intercalate)
+
 data Inst =
   Push Integer | Add | Mult | Sub | Tru | Fals | Equ | Le | And | Neg | Fetch String | State String | Noop |
   Branch Code Code | Loop Code Code
@@ -38,24 +41,29 @@ createEmptyStack :: Stack
 createEmptyStack = []
 
 stack2Str :: Stack -> String
-stack2Str [] = ""
-stack2Str [x] = show x
-stack2Str (x:xs) = (stack2Str xs) ++ "," ++ (show x)
+stack2Str stack = intercalate "," (stack2Str_aux stack)
+
+stack2Str_aux :: Stack -> [String]
+stack2Str_aux [] = []
+stack2Str_aux (x:xs) 
+  | isPush x = (stack2Str_aux xs) ++ [show (pushValue x)]
+  | isFals x = (stack2Str_aux xs) ++ ["False"]
+  | isTru x = (stack2Str_aux xs) ++ ["True"]
 
 -- deal with state
 createEmptyState :: State
 createEmptyState = []
 
 state2Str :: State -> String
-state2Str state = init (state2Str_aux state [])
+state2Str state = intercalate "," $ map (\(x, y) -> x ++ "=" ++ y) (sort (state2Str_aux state []))
 
-state2Str_aux :: State -> [String] -> String
-state2Str_aux [] _ = ""
+state2Str_aux :: State -> [String] -> [(String,String)]
+state2Str_aux [] _ = []
 state2Str_aux (x:xs) stack
   | isPush x = state2Str_aux xs (stack ++ [show (pushValue x)])
   | isFals x = state2Str_aux xs (stack ++ ["False"])
   | isTru x = state2Str_aux xs (stack ++ ["True"])
-  | isState x = (stateVar x) ++ "=" ++ (last stack) ++ "," ++ state2Str_aux xs (init stack)
+  | isState x = (state2Str_aux xs (init stack)) ++ [((stateVar x),(last stack))]
   | otherwise = error "Error in state2Str_aux (x:xs) stack"
 
 -- run :: (Code, Stack, State) -> (Code, Stack, State)
