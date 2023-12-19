@@ -2,7 +2,7 @@ import Data.List (sort)
 import Data.List (intercalate)
 
 data Inst =
-  Push Integer | Add | Mult | Sub | Tru | Fals | Equ | Le | And | Neg | Fetch String | State String | Noop |
+  Push Integer | Add | Mult | Sub | Tru | Fals | Equ | Le | And | Neg | Fetch String | Store String | Noop |
   Branch Code Code | Loop Code Code
   deriving Show
 
@@ -14,26 +14,22 @@ isPush :: Inst -> Bool
 isPush (Push _) = True
 isPush _ = False
 
-isState :: Inst -> Bool
-isState (State _) = True
-isState _ = False
+isFetch :: Inst -> Bool
+isFetch (Fetch _) = True
+isFetch _ = False
 
-isFals :: Inst -> Bool
-isFals Fals = True
-isFals _ = False
-
-isTru :: Inst -> Bool
-isTru Tru = True
-isTru _ = False
+isStore :: Inst -> Bool
+isStore (Store _) = True
+isStore _ = False
 
 pushValue :: Inst -> Integer
 pushValue x = case x of
   Push val -> val
   _        -> error "Not a Push instruction"
 
-stateVar :: Inst -> String
-stateVar x = case x of
-  State var -> var
+storeVar :: Inst -> String
+storeVar x = case x of
+  Store var -> var
   _        -> error "Not a State instruction"
 
 -- deal with stack
@@ -47,8 +43,9 @@ stack2Str_aux :: Stack -> [String]
 stack2Str_aux [] = []
 stack2Str_aux (x:xs) 
   | isPush x = (stack2Str_aux xs) ++ [show (pushValue x)]
-  | isFals x = (stack2Str_aux xs) ++ ["False"]
-  | isTru x = (stack2Str_aux xs) ++ ["True"]
+  | show(x) == "Fals" = (stack2Str_aux xs) ++ ["False"]
+  | show(x) == "Tru" = (stack2Str_aux xs) ++ ["True"]
+  | otherwise = error "Do nothing"
 
 -- deal with state
 createEmptyState :: State
@@ -61,34 +58,49 @@ state2Str_aux :: State -> [String] -> [(String,String)]
 state2Str_aux [] _ = []
 state2Str_aux (x:xs) stack
   | isPush x = state2Str_aux xs (stack ++ [show (pushValue x)])
-  | isFals x = state2Str_aux xs (stack ++ ["False"])
-  | isTru x = state2Str_aux xs (stack ++ ["True"])
-  | isState x = (state2Str_aux xs (init stack)) ++ [((stateVar x),(last stack))]
-  | otherwise = error "Error in state2Str_aux (x:xs) stack"
+  | isStore x = (state2Str_aux xs (init stack)) ++ [((storeVar x),(last stack))]
+  | show (x) == "Fals" = state2Str_aux xs (stack ++ ["False"])
+  | show (x) == "Tru" = state2Str_aux xs (stack ++ ["True"])
+  | otherwise = error "Do nothing"
 
--- run :: (Code, Stack, State) -> (Code, Stack, State)
-run = undefined -- TODO
+run :: (Code, Stack, State) -> IO (Code, Stack, State)
+run ([], stack, state) = return ([], stack, state)
+run ((xi:xf), stack, state)
+  | isPush xi || show xi == "Fals" || show xi == "Tru" =
+      run (xf, stack ++ [xi], state ++ [xi])
+  | isStore xi =
+    run (xf, init stack, state ++ [xi])
+  | show xi == "Add"  =
+    run (xf, (take (length stack - 2) stack) ++ [Push ((pushValue (last stack)) + (pushValue (last (init stack))))], state)
+  | show xi == "Sub"  =
+    run (xf, (take (length stack - 2) stack) ++ [Push ((pushValue (last stack)) - (pushValue (last (init stack))))], state)
+  | show xi == "Mult" =
+    run (xf, (take (length stack - 2) stack) ++ [Push ((pushValue (last stack)) * (pushValue (last (init stack))))], state)
+  | otherwise = error "Error in Run"
+
+
 
 -- To help you test your assembler
--- testAssembler :: Code -> (String, String)
--- testAssembler code = (stack2Str stack, state2Str state)
---  where (_,stack,state) = run(code, createEmptyStack, createEmptyState)
+testAssembler :: Code -> IO (String, String)
+testAssembler code = do
+  (_, stack, state) <- run (code, createEmptyStack, createEmptyState)
+  return (stack2Str stack, state2Str state)
 
 -- Examples:
--- testAssembler [Push 10,Push 4,Push 3,Sub,Mult] == ("-10","")
--- testAssembler [Fals,Push 3,Tru,State "var",State "a", State "someVar"] == ("","a=3,someVar=False,var=True")
--- testAssembler [Fals,State "var",Fetch "var"] == ("False","var=False")
+-- yes : testAssembler [Push 10,Push 4,Push 3,Sub,Mult] == ("-10","")
+-- yes : testAssembler [Fals,Push 3,Tru,Store "var",Store "a", Store "someVar"] == ("","a=3,someVar=False,var=True")
+-- testAssembler [Fals,Store "var",Fetch "var"] == ("False","var=False")
 -- testAssembler [Push (-20),Tru,Fals] == ("False,True,-20","")
 -- testAssembler [Push (-20),Tru,Tru,Neg] == ("False,True,-20","")
 -- testAssembler [Push (-20),Tru,Tru,Neg,Equ] == ("False,-20","")
 -- testAssembler [Push (-20),Push (-21), Le] == ("True","")
--- testAssembler [Push 5,State "x",Push 1,Fetch "x",Sub,State "x"] == ("","x=4")
--- testAssembler [Push 10,State "i",Push 1,State "fact",Loop [Push 1,Fetch "i",Equ,Neg] [Fetch "i",Fetch "fact",Mult,State "fact",Push 1,Fetch "i",Sub,State "i"]] == ("","fact=3628800,i=1")
+-- testAssembler [Push 5,Store "x",Push 1,Fetch "x",Sub,Store "x"] == ("","x=4")
+-- testAssembler [Push 10,Store "i",Push 1,Store "fact",Loop [Push 1,Fetch "i",Equ,Neg] [Fetch "i",Fetch "fact",Mult,Store "fact",Push 1,Fetch "i",Sub,Store "i"]] == ("","fact=3628800,i=1")
 -- If you test:
 -- testAssembler [Push 1,Push 2,And]
 -- You should get an exception with the string: "Run-time error"
 -- If you test:
--- testAssembler [Tru,Tru,State "y", Fetch "x",Tru]
+-- testAssembler [Tru,Tru,Store "y", Fetch "x",Tru]
 -- You should get an exception with the string: "Run-time error"
 
 -- Part 2
@@ -108,9 +120,9 @@ compile = undefined -- TODO
 parse = undefined -- TODO
 
 -- To help you test your parser
--- testParser :: String -> (String, String)
--- testParser programCode = (stack2Str stack, store2Str store)
---  where (_,stack,store) = run(compile (parse programCode), createEmptyStack, createEmptyStore)
+--testParser :: String -> (String, String)
+--testParser programCode = (stack2Str stack, store2Str store)
+  --where (_,stack,store) = run(compile (parse programCode), createEmptyStack, createEmptyStore)
 
 -- Examples:
 -- testParser "x := 5; x := x - 1;" == ("","x=4")
