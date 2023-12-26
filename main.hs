@@ -42,6 +42,10 @@ run ((xi:xf), stack, state)
     run (xf, take (length stack - 2) stack ++ [multOperation (last stack) (last (init stack))], state)
   | show xi == "Neg" =
     run (xf, init stack ++ [negOperation (last stack)], state)
+  | show xi == "Equ" = 
+    run (xf, take (length stack - 2) stack ++ [(equOperation (last stack) (last (init stack)))],state)
+  | show xi == "Le" = 
+    run (xf, take (length stack - 2) stack ++ [(leOperation (last stack) (last (init stack)))],state)
   | otherwise = error "Error in Run"
 
 -- To help you test your assembler
@@ -56,8 +60,8 @@ testAssembler code = do
 -- yes : testAssembler [Fals,Store "var",Fetch "var"] == ("False","var=False")
 -- yes : testAssembler [Push (-20),Tru,Fals] == ("False,True,-20","")
 -- yes : testAssembler [Push (-20),Tru,Tru,Neg] == ("False,True,-20","")
--- testAssembler [Push (-20),Tru,Tru,Neg,Equ] == ("False,-20","")
--- testAssembler [Push (-20),Push (-21), Le] == ("True","")
+-- yes : testAssembler [Push (-20),Tru,Tru,Neg,Equ] == ("False,-20","")
+-- yes : testAssembler [Push (-20),Push (-21), Le] == ("True","")
 -- testAssembler [Push 5,Store "x",Push 1,Fetch "x",Sub,Store "x"] == ("","x=4")
 -- testAssembler [Push 10,Store "i",Push 1,Store "fact",Loop [Push 1,Fetch "i",Equ,Neg] [Fetch "i",Fetch "fact",Mult,Store "fact",Push 1,Fetch "i",Sub,Store "i"]] == ("","fact=3628800,i=1")
 -- If you test:

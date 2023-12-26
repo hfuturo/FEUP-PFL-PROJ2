@@ -21,5 +21,27 @@ negOperation (Left a) = Left (-a)
 fetchOperation :: State -> String -> Value
 fetchOperation [] string = error "Error in fetchOperation"
 fetchOperation ((a,b):xs) string
-  | a == string = b
-  | otherwise = fetchOperation xs string
+    | a == string = b
+    | otherwise = fetchOperation xs string
+
+equOperation :: Value -> Value -> Value
+equOperation (Left a) (Left b) 
+    | a == b = Right "tt"
+    | otherwise = Right "ff"
+
+equOperation (Right a) (Right b)
+    | a == b = Right "tt"
+    | otherwise = Right "ff"
+
+equOperation _ _ = Right "ff"
+
+leOperation :: Value -> Value -> Value
+leOperation (Left a) (Left b) 
+    | a /= b = Right "tt"
+    | otherwise = Right "ff"
+
+leOperation (Right a) (Right b)
+    | a /= b = Right "tt"
+    | otherwise = Right "ff"
+
+leOperation _ _ = Right "tt"
