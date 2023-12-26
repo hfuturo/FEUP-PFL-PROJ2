@@ -19,7 +19,7 @@ negOperation (Right "tt") = Right "ff"
 negOperation (Left a) = Left (-a)
 
 fetchOperation :: State -> String -> Value
-fetchOperation [] string = error "Error in fetchOperation"
+fetchOperation [] string = error "Error time error"
 fetchOperation ((a,b):xs) string
     | a == string = b
     | otherwise = fetchOperation xs string
@@ -45,3 +45,19 @@ leOperation (Right a) (Right b)
     | otherwise = Right "ff"
 
 leOperation _ _ = Right "tt"
+
+lookUpValueState :: State -> String -> Bool
+lookUpValueState [] string = False
+lookUpValueState ((a,b):xs) string
+    | a == string = True
+    | otherwise = lookUpValueState xs string
+
+storeAuxOperation :: String -> Value -> String -> Value -> (String, Value)
+storeAuxOperation x a string value 
+    | x == string = (string,value)
+    | otherwise = (x,a)
+
+storeOperation :: State -> String -> Value -> State 
+storeOperation state string value
+    | lookUpValueState state string = map (\(x, a) -> storeAuxOperation x a string value) state
+    | otherwise = state ++ [(string, value)]

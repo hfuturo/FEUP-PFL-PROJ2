@@ -34,7 +34,7 @@ run ((xi:xf), stack, state)
   | show xi == "Tru" =
     run (xf, stack ++ [Right "tt"], state)
   | isStore xi =
-    run (xf, init stack, state ++ [(storeVar xi, last stack)])
+    run (xf, init stack, storeOperation state (storeVar xi) (last stack))
   | isFetch xi =
     run (xf, stack ++ [fetchOperation state (fetchVar xi)], state)
   | show xi == "Add" =
@@ -49,7 +49,7 @@ run ((xi:xf), stack, state)
     run (xf, take (length stack - 2) stack ++ [(equOperation (last stack) (last (init stack)))],state)
   | show xi == "Le" =
     run (xf, take (length stack - 2) stack ++ [(leOperation (last stack) (last (init stack)))],state)
-  | otherwise = error "Error in Run"
+  | otherwise = error "Error time error"
 
 -- To help you test your assembler
 -- testAssembler :: Code -> IO (String, String)
@@ -70,13 +70,13 @@ testAssembler code = (stack2Str stack, state2Str state)
 -- yes : testAssembler [Push (-20),Tru,Tru,Neg] == ("False,True,-20","")
 -- yes : testAssembler [Push (-20),Tru,Tru,Neg,Equ] == ("False,-20","")
 -- yes : testAssembler [Push (-20),Push (-21), Le] == ("True","")
--- testAssembler [Push 5,Store "x",Push 1,Fetch "x",Sub,Store "x"] == ("","x=4")
+-- yes : testAssembler [Push 5,Store "x",Push 1,Fetch "x",Sub,Store "x"] == ("","x=4")
 -- testAssembler [Push 10,Store "i",Push 1,Store "fact",Loop [Push 1,Fetch "i",Equ,Neg] [Fetch "i",Fetch "fact",Mult,Store "fact",Push 1,Fetch "i",Sub,Store "i"]] == ("","fact=3628800,i=1")
 -- If you test:
--- testAssembler [Push 1,Push 2,And]
+-- yes : testAssembler [Push 1,Push 2,And]
 -- You should get an exception with the string: "Run-time error"
 -- If you test:
--- testAssembler [Tru,Tru,Store "y", Fetch "x",Tru]
+-- yes : testAssembler [Tru,Tru,Store "y", Fetch "x",Tru]
 -- You should get an exception with the string: "Run-time error"
 
 -- Part 2
