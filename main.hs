@@ -1,4 +1,5 @@
 import Data.List ( sort, intercalate )
+import Data.Char (isDigit, digitToInt, isAlpha)
 import Inst
 import Action
 import Debug.Trace
@@ -114,7 +115,34 @@ lexer ('+' : restStr) = "+" : lexer restStr
 lexer ('*' : restStr) = "*" : lexer restStr
 lexer ('(' : restStr) = "(" : lexer restStr
 lexer (')' : restStr) = ")" : lexer restStr
-lexer (' ' : restStr) = lexer restSt
+lexer (',' : restStr) = "," : lexer restStr
+lexer (';' : restStr) = ";" : lexer restStr
+lexer (' ' : restStr) = lexer restStr
+
+lexer ('i' : 'f' : restStr) = "if" : lexer restStr
+lexer ('e' : 'l' : 's' : 'e' : restStr) = "else" : lexer restStr
+lexer ('t' : 'h' : 'e' : 'n' : restStr) = "then" : lexer restStr
+lexer ('n' : 'o' : 't' : restStr) = "not" : lexer restStr
+lexer ('a' : 'n' : 'd' : restStr) = "and" : lexer restStr
+lexer ('w' : 'h' : 'i' : 'l' : 'e' : restStr) = "while" : lexer restStr
+
+lexer ('T' : 'r' : 'u' : 'e' : restStr) = "True" : lexer restStr
+lexer ('F' : 'a' : 'l' : 's' : 'e' : restStr) = "False" : lexer restStr
+
+lexer ('<' : '=' : restStr) = "<=" : lexer restStr
+lexer ('>' : '=' : restStr) = ">=" : lexer restStr
+lexer (':' : '=' : restStr) = ":=" : lexer restStr
+lexer ('=' : '=' : restStr) = "==" : lexer restStr
+lexer ('=' : restStr) = "=" : lexer restStr
+
+lexer (chr : string)
+  | isDigit chr = digitStr : lexer restDigitStr
+  | isAlpha chr = alphaStr : lexer restAlphaStr
+  where
+    (alphaStr, restAlphaStr) = break (not . isAlpha) (chr : string)
+    (digitStr, restDigitStr) = break (not . isDigit) (chr : string)
+    stringToInt :: String -> Int
+    stringToInt = foldl (\acc chr -> 10 * acc + digitToInt chr) 0  
 
 -- To help you test your parser
 --testParser :: String -> (String, String)
