@@ -88,9 +88,9 @@ testAssembler code = (stack2Str stack, state2Str state)
 -- yes : testAssembler [Tru,Tru,Store "y", Fetch "x",Tru]
 -- You should get an exception with the string: "Run-time error"
 -- yes : testAssembler [Tru, Branch [Push 10, Push 4, Push 3, Sub, Mult] [Fals, Push 3, Tru, Store "var", Store "a", Store "someVar"]] == ("-10","")
--- tes : testAssembler [Fals, Branch [Push 10, Push 4, Push 3, Sub, Mult] [Fals, Push 3, Tru, Store "var", Store "a", Store "someVar"]] == ("","a=3,someVar=False,var=True")
--- tes : testAssembler [Tru, Tru, Branch [Branch [Fals,Store "var",Fetch "var"] [Push (-20),Tru,Fals]] [Push (-20),Tru,Tru,Neg,Equ]] == ("False","var=False")
--- tes : testAssembler [Tru, Branch [Fals, Branch [Fals,Store "var",Fetch "var"] [Push (-20),Tru,Fals]] [Push (-20),Tru,Tru,Neg,Equ]] == ("False,True,-20","")
+-- yes : testAssembler [Fals, Branch [Push 10, Push 4, Push 3, Sub, Mult] [Fals, Push 3, Tru, Store "var", Store "a", Store "someVar"]] == ("","a=3,someVar=False,var=True")
+-- yes : testAssembler [Tru, Tru, Branch [Branch [Fals,Store "var",Fetch "var"] [Push (-20),Tru,Fals]] [Push (-20),Tru,Tru,Neg,Equ]] == ("False","var=False")
+-- yes : testAssembler [Tru, Branch [Fals, Branch [Fals,Store "var",Fetch "var"] [Push (-20),Tru,Fals]] [Push (-20),Tru,Tru,Neg,Equ]] == ("False,True,-20","")
 
 -- Part 2
 
@@ -108,15 +108,13 @@ compile = undefined -- TODO
 -- parse :: String -> Program
 parse = undefined -- TODO
 
--- lexer :: String -> [Token]
--- lexer [] = []
--- lexer ('+' : restStr) = PlusTok : lexer restStr
--- lexer ('*' : restStr) = TimesTok : lexer restStr
--- lexer ('(' : restStr) = OpenTok : lexer restStr
--- lexer (')' : restStr) = CloseTok : lexer restStr
--- lexer (chr : restStr)
---   | isSpace chr = lexer restStr
--- lexer (_ : restString) = error ("unexpected character: '" ++ show chr ++ "'")
+lexer :: String -> [String]
+lexer [] = []
+lexer ('+' : restStr) = "+" : lexer restStr
+lexer ('*' : restStr) = "*" : lexer restStr
+lexer ('(' : restStr) = "(" : lexer restStr
+lexer (')' : restStr) = ")" : lexer restStr
+lexer (' ' : restStr) = lexer restStr
 
 -- To help you test your parser
 --testParser :: String -> (String, String)
