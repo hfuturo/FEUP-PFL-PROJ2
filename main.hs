@@ -131,6 +131,7 @@ lexer ('=' : restStr) = "=" : lexer restStr
 lexer (chr : string)
   | isDigit chr = digitStr : lexer restDigitStr
   | isAlpha chr = alphaStr : lexer restAlphaStr
+  | otherwise = error ("Invalid character: " ++ show chr)
   where
     (alphaStr, restAlphaStr) = break (not . isAlpha) (chr : string)
     (digitStr, restDigitStr) = break (not . isDigit) (chr : string)
