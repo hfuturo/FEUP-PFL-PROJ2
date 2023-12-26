@@ -37,11 +37,7 @@ equOperation _ _ = Right "ff"
 
 leOperation :: Value -> Value -> Value
 leOperation (Left a) (Left b) 
-    | a /= b = Right "tt"
-    | otherwise = Right "ff"
-
-leOperation (Right a) (Right b)
-    | a /= b = Right "tt"
+    | a <= b = Right "tt"
     | otherwise = Right "ff"
 
 leOperation _ _ = Right "tt"
