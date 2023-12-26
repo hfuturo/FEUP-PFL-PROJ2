@@ -1,6 +1,7 @@
 import Data.List ( sort, intercalate )
 import Inst
 import Action
+import Debug.Trace
 
 -- deal with stack
 createEmptyStack :: Stack
@@ -27,8 +28,16 @@ state2Str state = intercalate "," $ map (\(x, y) -> x ++ "=" ++ (valueToStr y)) 
 run :: (Code, Stack, State) -> (Code, Stack, State)
 run ([], stack, state) = ([], stack, state)
 run ((xi:xf), stack, state)
+  | isLoop xi =
+    run (xf ++ (loopC1Var xi) ++ [Branch ((loopC2Var xi) ++ [xi]) [Noop]], stack, state)
+  | isBranch xi && (last stack) == Right "tt" = 
+    run (xf ++ (branchC1Var xi), init stack, state)
+  | isBranch xi && (last stack) == Right "ff" = 
+    run (xf ++ (branchC2Var xi), init stack, state)
   | isPush xi =
     run (xf, stack ++ [Left (pushValue xi)], state)
+  | show xi == "Noop" = 
+    run (xf, stack, state)
   | show xi == "Fals" =
     run (xf, stack ++ [Right "ff"], state)
   | show xi == "Tru" =
