@@ -112,25 +112,18 @@ parse = undefined -- TODO
 lexer :: String -> [String]
 lexer [] = []
 lexer ('+' : restStr) = "+" : lexer restStr
+lexer ('-' : restStr) = "+" : lexer restStr
+lexer ('/' : restStr) = "+" : lexer restStr
 lexer ('*' : restStr) = "*" : lexer restStr
 lexer ('(' : restStr) = "(" : lexer restStr
 lexer (')' : restStr) = ")" : lexer restStr
 lexer (',' : restStr) = "," : lexer restStr
 lexer (';' : restStr) = ";" : lexer restStr
 lexer (' ' : restStr) = lexer restStr
-
-lexer ('i' : 'f' : restStr) = "if" : lexer restStr
-lexer ('e' : 'l' : 's' : 'e' : restStr) = "else" : lexer restStr
-lexer ('t' : 'h' : 'e' : 'n' : restStr) = "then" : lexer restStr
-lexer ('n' : 'o' : 't' : restStr) = "not" : lexer restStr
-lexer ('a' : 'n' : 'd' : restStr) = "and" : lexer restStr
-lexer ('w' : 'h' : 'i' : 'l' : 'e' : restStr) = "while" : lexer restStr
-
-lexer ('T' : 'r' : 'u' : 'e' : restStr) = "True" : lexer restStr
-lexer ('F' : 'a' : 'l' : 's' : 'e' : restStr) = "False" : lexer restStr
-
 lexer ('<' : '=' : restStr) = "<=" : lexer restStr
+lexer ('<' : restStr) = "<" : lexer restStr
 lexer ('>' : '=' : restStr) = ">=" : lexer restStr
+lexer ('>' : restStr) = ">" : lexer restStr
 lexer (':' : '=' : restStr) = ":=" : lexer restStr
 lexer ('=' : '=' : restStr) = "==" : lexer restStr
 lexer ('=' : restStr) = "=" : lexer restStr
