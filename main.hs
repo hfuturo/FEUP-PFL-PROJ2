@@ -114,7 +114,7 @@ lexer ('+' : restStr) = "+" : lexer restStr
 lexer ('*' : restStr) = "*" : lexer restStr
 lexer ('(' : restStr) = "(" : lexer restStr
 lexer (')' : restStr) = ")" : lexer restStr
-lexer (' ' : restStr) = lexer restStr
+lexer (' ' : restStr) = lexer restSt
 
 -- To help you test your parser
 --testParser :: String -> (String, String)
