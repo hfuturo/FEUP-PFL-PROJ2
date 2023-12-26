@@ -1,5 +1,6 @@
 module Exp where
 
-data Aexp = "Add" | "Sub" | "Mult" deriving Show
-data Bexp = "==" | "<=" | ">=" deriving Show
+data Aexp = 
+    Add Aexp Aexp | Sub Aexp Aexp | Mult Aexp Aexp | Neg Aexp deriving Show
+data Bexp = Equ Bexp Bexp | Leq Bexp Bexp | Neg Bexp deriving Show
 data Stm = "if" | "then" | "else" | ":=" deriving Show

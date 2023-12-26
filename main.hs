@@ -72,27 +72,6 @@ testAssembler :: Code -> (String, String)
 testAssembler code = (stack2Str stack, state2Str state)
   where (_,stack,state) = run (code, createEmptyStack, createEmptyState)
 
--- Examples:
--- yes : testAssembler [Push 10,Push 4,Push 3,Sub,Mult] == ("-10","")
--- yes : testAssembler [Fals,Push 3,Tru,Store "var",Store "a", Store "someVar"] == ("","a=3,someVar=False,var=True")
--- yes : testAssembler [Fals,Store "var",Fetch "var"] == ("False","var=False")
--- yes : testAssembler [Push (-20),Tru,Fals] == ("False,True,-20","")
--- yes : testAssembler [Push (-20),Tru,Tru,Neg] == ("False,True,-20","")
--- yes : testAssembler [Push (-20),Tru,Tru,Neg,Equ] == ("False,-20","")
--- yes : testAssembler [Push (-20),Push (-21), Le] == ("True","")
--- yes : testAssembler [Push 5,Store "x",Push 1,Fetch "x",Sub,Store "x"] == ("","x=4")
--- yes : testAssembler [Push 10,Store "i",Push 1,Store "fact",Loop [Push 1,Fetch "i",Equ,Neg] [Fetch "i",Fetch "fact",Mult,Store "fact",Push 1,Fetch "i",Sub,Store "i"]] == ("","fact=3628800,i=1")
--- If you test:
--- yes : testAssembler [Push 1,Push 2,And]
--- You should get an exception with the string: "Run-time error"
--- If you test:
--- yes : testAssembler [Tru,Tru,Store "y", Fetch "x",Tru]
--- You should get an exception with the string: "Run-time error"
--- yes : testAssembler [Tru, Branch [Push 10, Push 4, Push 3, Sub, Mult] [Fals, Push 3, Tru, Store "var", Store "a", Store "someVar"]] == ("-10","")
--- yes : testAssembler [Fals, Branch [Push 10, Push 4, Push 3, Sub, Mult] [Fals, Push 3, Tru, Store "var", Store "a", Store "someVar"]] == ("","a=3,someVar=False,var=True")
--- yes : testAssembler [Tru, Tru, Branch [Branch [Fals,Store "var",Fetch "var"] [Push (-20),Tru,Fals]] [Push (-20),Tru,Tru,Neg,Equ]] == ("False","var=False")
--- yes : testAssembler [Tru, Branch [Fals, Branch [Fals,Store "var",Fetch "var"] [Push (-20),Tru,Fals]] [Push (-20),Tru,Tru,Neg,Equ]] == ("False,True,-20","")
-
 -- Part 2
 
 -- TODO: Define the types Aexp, Bexp, Stm and Program
@@ -106,48 +85,53 @@ compB = undefined -- TODO
 -- compile :: Program -> Code
 compile = undefined -- TODO
 
--- parse :: String -> Program
-parse = undefined -- TODO
+data Token = 
+  PlusTok    | MultTok      | SubTok       | AddTok      | OpenTok | CloseTok   | 
+  IntTok Int | ComaTok      | ComaPointTok | MoreTok     | LessTok | MoreEquTok | 
+  LessEquTok | DoubleEquTok | EquTok       | PointEquTok | IfTok   | ElseTok    |
+  ThenTok    | WhileTok     | TrueTok      | FalseTok    | Var String deriving (Show)
 
-lexer :: String -> [String]
+lexer :: String -> [Token]
 lexer [] = []
-lexer ('+' : restStr) = "+" : lexer restStr
-lexer ('-' : restStr) = "+" : lexer restStr
-lexer ('/' : restStr) = "+" : lexer restStr
-lexer ('*' : restStr) = "*" : lexer restStr
-lexer ('(' : restStr) = "(" : lexer restStr
-lexer (')' : restStr) = ")" : lexer restStr
-lexer (',' : restStr) = "," : lexer restStr
-lexer (';' : restStr) = ";" : lexer restStr
+
+lexer ('+' : restStr) = PlusTok : lexer restStr
+lexer ('-' : restStr) = SubTok : lexer restStr
+lexer ('/' : restStr) = AddTok : lexer restStr
+lexer ('*' : restStr) = MultTok : lexer restStr
+
+lexer ('(' : restStr) = OpenTok : lexer restStr
+lexer (')' : restStr) = CloseTok : lexer restStr
+lexer (',' : restStr) = ComaTok : lexer restStr
+lexer (';' : restStr) = ComaPointTok : lexer restStr
 lexer (' ' : restStr) = lexer restStr
-lexer ('<' : '=' : restStr) = "<=" : lexer restStr
-lexer ('<' : restStr) = "<" : lexer restStr
-lexer ('>' : '=' : restStr) = ">=" : lexer restStr
-lexer ('>' : restStr) = ">" : lexer restStr
-lexer (':' : '=' : restStr) = ":=" : lexer restStr
-lexer ('=' : '=' : restStr) = "==" : lexer restStr
-lexer ('=' : restStr) = "=" : lexer restStr
+
+lexer ('<' : '=' : restStr) = LessEquTok : lexer restStr
+lexer ('<' : restStr)       = LessTok : lexer restStr
+lexer ('>' : '=' : restStr) = MoreEquTok : lexer restStr
+lexer ('>' : restStr)       = MoreTok : lexer restStr
+lexer (':' : '=' : restStr) = PointEquTok : lexer restStr
+lexer ('=' : '=' : restStr) = DoubleEquTok : lexer restStr
+lexer ('=' : restStr)       = EquTok : lexer restStr
+
+lexer ('i' : 'f' : restStr)                   = IfTok : lexer restStr
+lexer ('e' : 'l' : 's' : 'e' : restStr)       = ElseTok : lexer restStr
+lexer ('t' : 'h' : 'e' : 'n' : restStr)       = ThenTok : lexer restStr
+lexer ('w' : 'h' : 'i' : 'l' : 'e' : restStr) = WhileTok : lexer restStr
+lexer ('T' : 'r' : 'u' : 'e' : restStr)       = TrueTok : lexer restStr
+lexer ('F' : 'a' : 'l' : 's' : 'e' : restStr) = FalseTok : lexer restStr
 
 lexer (chr : string)
-  | isDigit chr = digitStr : lexer restDigitStr
-  | isAlpha chr = alphaStr : lexer restAlphaStr
+  | isDigit chr = (IntTok (stringToInt digitStr)) : lexer restDigitStr
+  | isAlpha chr = (Var alphaStr) : lexer restAlphaStr
   | otherwise = error ("Invalid character: " ++ show chr)
   where
     (alphaStr, restAlphaStr) = break (not . isAlpha) (chr : string)
     (digitStr, restDigitStr) = break (not . isDigit) (chr : string)
-    stringToInt :: String -> Int
-    stringToInt = foldl (\acc chr -> 10 * acc + digitToInt chr) 0  
+
+stringToInt :: String -> Int
+stringToInt = foldl (\acc chr -> 10 * acc + digitToInt chr) 0  
 
 -- To help you test your parser
 --testParser :: String -> (String, String)
 --testParser programCode = (stack2Str stack, store2Str store)
   --where (_,stack,store) = run(compile (parse programCode), createEmptyStack, createEmptyStore)
-
--- Examples:
--- testParser "x := 5; x := x - 1;" == ("","x=4")
--- testParser "if (not True and 2 <= 5 = 3 == 4) then x :=1; else y := 2;" == ("","y=2")
--- testParser "x := 42; if x <= 43 then x := 1; else (x := 33; x := x+1;)" == ("","x=1")
--- testParser "x := 42; if x <= 43 then x := 1; else x := 33; x := x+1;" == ("","x=2")
--- testParser "x := 42; if x <= 43 then x := 1; else x := 33; x := x+1; z := x+x;" == ("","x=2,z=4")
--- testParser "x := 2; y := (x - 3)*(4 + 2*3); z := x +x*(2);" == ("","x=2,y=-10,z=6")
--- testParser "i := 10; fact := 1; while (not(i == 1)) do (fact := fact * i; i := i - 1;);" == ("","fact=3628800,i=1")
