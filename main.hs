@@ -58,7 +58,7 @@ run ((xi:xf), stack, state)
     run (xf, take (length stack - 2) stack ++ [(equOperation (last stack) (last (init stack)))],state)
   | show xi == "Le" =
     run (xf, take (length stack - 2) stack ++ [(leOperation (last stack) (last (init stack)))],state)
-  | otherwise = error "Error time error"
+  | otherwise = error "Run-time error"
 
 -- To help you test your assembler
 -- testAssembler :: Code -> IO (String, String)
@@ -80,13 +80,17 @@ testAssembler code = (stack2Str stack, state2Str state)
 -- yes : testAssembler [Push (-20),Tru,Tru,Neg,Equ] == ("False,-20","")
 -- yes : testAssembler [Push (-20),Push (-21), Le] == ("True","")
 -- yes : testAssembler [Push 5,Store "x",Push 1,Fetch "x",Sub,Store "x"] == ("","x=4")
--- testAssembler [Push 10,Store "i",Push 1,Store "fact",Loop [Push 1,Fetch "i",Equ,Neg] [Fetch "i",Fetch "fact",Mult,Store "fact",Push 1,Fetch "i",Sub,Store "i"]] == ("","fact=3628800,i=1")
+-- yes : testAssembler [Push 10,Store "i",Push 1,Store "fact",Loop [Push 1,Fetch "i",Equ,Neg] [Fetch "i",Fetch "fact",Mult,Store "fact",Push 1,Fetch "i",Sub,Store "i"]] == ("","fact=3628800,i=1")
 -- If you test:
 -- yes : testAssembler [Push 1,Push 2,And]
 -- You should get an exception with the string: "Run-time error"
 -- If you test:
 -- yes : testAssembler [Tru,Tru,Store "y", Fetch "x",Tru]
 -- You should get an exception with the string: "Run-time error"
+-- testAssembler [Tru, Branch [Push 10, Push 4, Push 3, Sub, Mult] [Fals, Push 3, Tru, Store "var", Store "a", Store "someVar"]] == ("-10","")
+-- testAssembler [Fals, Branch [Push 10, Push 4, Push 3, Sub, Mult] [Fals, Push 3, Tru, Store "var", Store "a", Store "someVar"]] == ("","a=3,someVar=False,var=True")
+-- testAssembler [Tru, Tru, Branch [Branch [Fals,Store "var",Fetch "var"] [Push (-20),Tru,Fals]] [Push (-20),Tru,Tru,Neg,Equ]] == ("False","var=False")
+-- testAssembler [Tru, Branch [Fals, Branch [Fals,Store "var",Fetch "var"] [Push (-20),Tru,Fals]] [Push (-20),Tru,Tru,Neg,Equ]] == ("False,True,-20","")
 
 -- Part 2
 
@@ -103,6 +107,16 @@ compile = undefined -- TODO
 
 -- parse :: String -> Program
 parse = undefined -- TODO
+
+-- lexer :: String -> [Token]
+-- lexer [] = []
+-- lexer ('+' : restStr) = PlusTok : lexer restStr
+-- lexer ('*' : restStr) = TimesTok : lexer restStr
+-- lexer ('(' : restStr) = OpenTok : lexer restStr
+-- lexer (')' : restStr) = CloseTok : lexer restStr
+-- lexer (chr : restStr)
+--   | isSpace chr = lexer restStr
+-- lexer (_ : restString) = error ("unexpected character: '" ++ show chr ++ "'")
 
 -- To help you test your parser
 --testParser :: String -> (String, String)

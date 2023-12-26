@@ -19,7 +19,7 @@ negOperation (Right "tt") = Right "ff"
 negOperation (Left a) = Left (-a)
 
 fetchOperation :: State -> String -> Value
-fetchOperation [] string = error "Error time error"
+fetchOperation [] string = error "Run-time error"
 fetchOperation ((a,b):xs) string
     | a == string = b
     | otherwise = fetchOperation xs string
