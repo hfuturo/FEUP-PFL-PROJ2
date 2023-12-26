@@ -1,5 +1,4 @@
-import Data.List (sort)
-import Data.List (intercalate)
+import Data.List ( sort, intercalate )
 import Inst
 import Action
 
@@ -12,7 +11,10 @@ stack2Str stack = intercalate "," $ map valueToStr (reverse stack)
 
 valueToStr :: Value -> String
 valueToStr (Left x) = show x
-valueToStr (Right s) = s
+valueToStr (Right s) 
+  | s == "ff" = show False
+  | s == "tt" = show True
+  | otherwise = s
 
 -- deal with state
 createEmptyState :: State
@@ -21,38 +23,44 @@ createEmptyState = []
 state2Str :: State -> String
 state2Str state = intercalate "," $ map (\(x, y) -> x ++ "=" ++ (valueToStr y)) (sort state)
 
-run :: (Code, Stack, State) -> IO (Code, Stack, State)
-run ([], stack, state) = return ([], stack, state)
+-- run :: (Code, Stack, State) -> IO (Code, Stack, State)
+run :: (Code, Stack, State) -> (Code, Stack, State)
+run ([], stack, state) = ([], stack, state)
 run ((xi:xf), stack, state)
-  | isPush xi = 
+  | isPush xi =
     run (xf, stack ++ [Left (pushValue xi)], state)
-  | show xi == "Fals" = 
+  | show xi == "Fals" =
     run (xf, stack ++ [Right "ff"], state)
-  | show xi == "Tru" = 
+  | show xi == "Tru" =
     run (xf, stack ++ [Right "tt"], state)
-  | isStore xi = 
+  | isStore xi =
     run (xf, init stack, state ++ [(storeVar xi, last stack)])
   | isFetch xi =
     run (xf, stack ++ [fetchOperation state (fetchVar xi)], state)
   | show xi == "Add" =
     run (xf, take (length stack - 2) stack ++ [addOperation (last stack) (last (init stack))], state)
   | show xi == "Sub" =
-    run (xf, take (length stack - 2) stack ++ [subOperation(last stack) (last (init stack))], state)
+    run (xf, take (length stack - 2) stack ++ [subOperation (last stack) (last (init stack))], state)
   | show xi == "Mult" =
     run (xf, take (length stack - 2) stack ++ [multOperation (last stack) (last (init stack))], state)
   | show xi == "Neg" =
     run (xf, init stack ++ [negOperation (last stack)], state)
-  | show xi == "Equ" = 
+  | show xi == "Equ" =
     run (xf, take (length stack - 2) stack ++ [(equOperation (last stack) (last (init stack)))],state)
-  | show xi == "Le" = 
+  | show xi == "Le" =
     run (xf, take (length stack - 2) stack ++ [(leOperation (last stack) (last (init stack)))],state)
   | otherwise = error "Error in Run"
 
 -- To help you test your assembler
-testAssembler :: Code -> IO (String, String)
-testAssembler code = do
-  (_, stack, state) <- run (code, createEmptyStack, createEmptyState)
-  return (stack2Str stack, state2Str state)
+-- testAssembler :: Code -> IO (String, String)
+-- testAssembler code = do
+--   (_, stack, state) <- run (code, createEmptyStack, createEmptyState)
+--   return (stack2Str stack, state2Str state)
+
+-- To help you test your assembler
+testAssembler :: Code -> (String, String)
+testAssembler code = (stack2Str stack, state2Str state)
+  where (_,stack,state) = run (code, createEmptyStack, createEmptyState)
 
 -- Examples:
 -- yes : testAssembler [Push 10,Push 4,Push 3,Sub,Mult] == ("-10","")
