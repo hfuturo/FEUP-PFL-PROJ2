@@ -86,17 +86,18 @@ compB = undefined -- TODO
 compile = undefined -- TODO
 
 data Token = 
-  PlusTok    | MultTok      | SubTok       | AddTok      | OpenTok | CloseTok   | 
-  IntTok Int | ComaTok      | ComaPointTok | MoreTok     | LessTok | MoreEquTok | 
+  PlusTok    | MultTok      | SubTok           | OpenTok | CloseTok   | 
+  IntTok Integer | ComaTok      | ComaPointTok | MoreTok     | LessTok | MoreEquTok | 
   LessEquTok | DoubleEquTok | EquTok       | PointEquTok | IfTok   | ElseTok    |
   ThenTok    | WhileTok     | TrueTok      | FalseTok    | Var String deriving (Show)
+
+data Aexp = Addexp Aexp Aexp | Subexp Aexp Aexp | Multexp Aexp Aexp | IntVarexp Integer deriving (Show)
 
 lexer :: String -> [Token]
 lexer [] = []
 
 lexer ('+' : restStr) = PlusTok : lexer restStr
 lexer ('-' : restStr) = SubTok : lexer restStr
-lexer ('/' : restStr) = AddTok : lexer restStr
 lexer ('*' : restStr) = MultTok : lexer restStr
 
 lexer ('(' : restStr) = OpenTok : lexer restStr
@@ -121,7 +122,7 @@ lexer ('T' : 'r' : 'u' : 'e' : restStr)       = TrueTok : lexer restStr
 lexer ('F' : 'a' : 'l' : 's' : 'e' : restStr) = FalseTok : lexer restStr
 
 lexer (chr : string)
-  | isDigit chr = (IntTok (stringToInt digitStr)) : lexer restDigitStr
+  | isDigit chr = (IntTok (read digitStr)) : lexer restDigitStr
   | isAlpha chr = (Var alphaStr) : lexer restAlphaStr
   | otherwise = error ("Invalid character: " ++ show chr)
   where
@@ -130,6 +131,41 @@ lexer (chr : string)
 
 stringToInt :: String -> Int
 stringToInt = foldl (\acc chr -> 10 * acc + digitToInt chr) 0  
+
+parseIntOrPar :: [Token] -> Maybe (Aexp, [Token])
+parseIntOrPar (IntTok n : restTokens) = Just (IntVarexp n, restTokens)
+parseIntOrPar (OpenTok : restTokens1) =
+  case parseSumOrProdOrIntOrPar restTokens1 of
+    Just (expr, (CloseTok : restTokens2)) ->
+      Just (expr, restTokens2)
+    _ -> Nothing -- no closing paren
+parseIntOrPar _ = Nothing
+
+parseProdOrIntOrPar :: [Token] -> Maybe (Aexp, [Token])
+parseProdOrIntOrPar tokens
+  = case parseIntOrPar tokens of
+    Just (expr1, (MultTok : restTokens1)) ->
+      case parseProdOrIntOrPar restTokens1 of
+        Just (expr2, restTokens2) ->
+          Just (Multexp expr1 expr2, restTokens2)
+        Nothing -> Nothing
+    result -> result
+
+parseSumOrProdOrIntOrPar::[Token] -> Maybe (Aexp, [Token])
+parseSumOrProdOrIntOrPar tokens
+  = case parseProdOrIntOrPar tokens of
+    Just (expr1, (PlusTok : restTokens1)) ->
+      case parseSumOrProdOrIntOrPar restTokens1 of
+        Just (expr2, restTokens2) ->
+          Just (Addexp expr1 expr2, restTokens2)
+        Nothing -> Nothing
+    result -> result
+
+parse :: [Token] -> Aexp
+parse tokens =
+  case parseSumOrProdOrIntOrPar tokens of
+    Just (expr, []) -> expr
+    _ -> error "Parse error"
 
 -- To help you test your parser
 --testParser :: String -> (String, String)
