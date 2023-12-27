@@ -65,3 +65,13 @@ branchC2Var :: Inst -> Code
 branchC2Var x = case x of
     Branch _ c2 -> c2
     _        -> error "Not a Loop c2 instruction"
+
+-- part 2 --
+
+data Token = 
+  PlusTok    | MultTok      | SubTok           | OpenTok | CloseTok   | 
+  IntTok Integer | ComaTok      | ComaPointTok | MoreTok     | LessTok | MoreEquTok | 
+  LessEquTok | DoubleEquTok | EquTok       | PointEquTok | IfTok   | ElseTok    |
+  ThenTok    | WhileTok     | TrueTok      | FalseTok    | Var String deriving (Show)
+
+data Aexp = Addexp Aexp Aexp | Subexp Aexp Aexp | Multexp Aexp Aexp | IntVarexp Integer deriving (Show)

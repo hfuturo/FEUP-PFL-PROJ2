@@ -85,14 +85,6 @@ compB = undefined -- TODO
 -- compile :: Program -> Code
 compile = undefined -- TODO
 
-data Token = 
-  PlusTok    | MultTok      | SubTok           | OpenTok | CloseTok   | 
-  IntTok Integer | ComaTok      | ComaPointTok | MoreTok     | LessTok | MoreEquTok | 
-  LessEquTok | DoubleEquTok | EquTok       | PointEquTok | IfTok   | ElseTok    |
-  ThenTok    | WhileTok     | TrueTok      | FalseTok    | Var String deriving (Show)
-
-data Aexp = Addexp Aexp Aexp | Subexp Aexp Aexp | Multexp Aexp Aexp | IntVarexp Integer deriving (Show)
-
 lexer :: String -> [Token]
 lexer [] = []
 
