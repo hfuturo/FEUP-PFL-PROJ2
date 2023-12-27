@@ -1,7 +1,7 @@
 import Data.List ( sort, intercalate )
-import Data.Char (isDigit, digitToInt, isAlpha)
 import Inst
 import Action
+import Lexer
 import Debug.Trace
 
 -- deal with stack
@@ -75,57 +75,25 @@ testAssembler code = (stack2Str stack, state2Str state)
 -- Part 2
 
 -- TODO: Define the types Aexp, Bexp, Stm and Program
+data Aexp = 
+  Addexp Aexp Aexp  | Subexp Aexp Aexp | 
+  Multexp Aexp Aexp | IntVarexp Integer |
+  StringVarexp String deriving (Show)
+
+data Stm = 
+  Storexp String Aexp deriving (Show)
 
 compA :: Aexp -> Code
 compA (IntVarexp n) = [Push n]
 compA (Addexp e1 e2) = compA e1 ++ compA e2 ++ [Add]
-
- -- TODO
+compA (Subexp e1 e2) = compA e1 ++ compA e2 ++ [Sub]
+compA (Multexp e1 e2) = compA e1 ++ compA e2 ++ [Mult]
 
 -- compB :: Bexp -> Code
 compB = undefined -- TODO
 
 -- compile :: Program -> Code
 compile = undefined  -- TODO
-
-lexer :: String -> [Token]
-lexer [] = []
-
-lexer ('+' : restStr) = PlusTok : lexer restStr
-lexer ('-' : restStr) = SubTok : lexer restStr
-lexer ('*' : restStr) = MultTok : lexer restStr
-
-lexer ('(' : restStr) = OpenTok : lexer restStr
-lexer (')' : restStr) = CloseTok : lexer restStr
-lexer (',' : restStr) = ComaTok : lexer restStr
-lexer (';' : restStr) = ComaPointTok : lexer restStr
-lexer (' ' : restStr) = lexer restStr
-
-lexer ('<' : '=' : restStr) = LessEquTok : lexer restStr
-lexer ('<' : restStr)       = LessTok : lexer restStr
-lexer ('>' : '=' : restStr) = MoreEquTok : lexer restStr
-lexer ('>' : restStr)       = MoreTok : lexer restStr
-lexer (':' : '=' : restStr) = PointEquTok : lexer restStr
-lexer ('=' : '=' : restStr) = DoubleEquTok : lexer restStr
-lexer ('=' : restStr)       = EquTok : lexer restStr
-
-lexer ('i' : 'f' : restStr)                   = IfTok : lexer restStr
-lexer ('e' : 'l' : 's' : 'e' : restStr)       = ElseTok : lexer restStr
-lexer ('t' : 'h' : 'e' : 'n' : restStr)       = ThenTok : lexer restStr
-lexer ('w' : 'h' : 'i' : 'l' : 'e' : restStr) = WhileTok : lexer restStr
-lexer ('T' : 'r' : 'u' : 'e' : restStr)       = TrueTok : lexer restStr
-lexer ('F' : 'a' : 'l' : 's' : 'e' : restStr) = FalseTok : lexer restStr
-
-lexer (chr : string)
-  | isDigit chr = (IntTok (read digitStr)) : lexer restDigitStr
-  | isAlpha chr = (Var alphaStr) : lexer restAlphaStr
-  | otherwise = error ("Invalid character: " ++ show chr)
-  where
-    (alphaStr, restAlphaStr) = break (not . isAlpha) (chr : string)
-    (digitStr, restDigitStr) = break (not . isDigit) (chr : string)
-
-stringToInt :: String -> Int
-stringToInt = foldl (\acc chr -> 10 * acc + digitToInt chr) 0  
 
 parseIntOrPar :: [Token] -> Maybe (Aexp, [Token])
 parseIntOrPar (IntTok n : restTokens) = Just (IntVarexp n, restTokens)
