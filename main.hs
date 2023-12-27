@@ -78,13 +78,15 @@ testAssembler code = (stack2Str stack, state2Str state)
 data Aexp = 
   Addexp Aexp Aexp  | Subexp Aexp Aexp | 
   Multexp Aexp Aexp | IntVarexp Integer |
-  StringVarexp String deriving (Show)
+  StringVarexp String 
+  deriving (Show)
 
 data Stm = 
   Storexp String Aexp deriving (Show)
 
 compA :: Aexp -> Code
 compA (IntVarexp n) = [Push n]
+compA (StringVarexp n) = [Fetch n]
 compA (Addexp e1 e2) = compA e1 ++ compA e2 ++ [Add]
 compA (Subexp e1 e2) = compA e1 ++ compA e2 ++ [Sub]
 compA (Multexp e1 e2) = compA e1 ++ compA e2 ++ [Mult]
@@ -95,41 +97,51 @@ compB = undefined -- TODO
 -- compile :: Program -> Code
 compile = undefined  -- TODO
 
-parseIntOrPar :: [Token] -> Maybe (Aexp, [Token])
-parseIntOrPar (IntTok n : restTokens) = Just (IntVarexp n, restTokens)
-parseIntOrPar (OpenTok : restTokens1) =
-  case parseSumOrProdOrIntOrPar restTokens1 of
+parseVarPar :: [Token] -> Maybe (Aexp, [Token])
+parseVarPar (IntTok n : restTokens) = Just (IntVarexp n, restTokens)
+parseVarPar (VarTok n : restTokens) = Just (StringVarexp n, restTokens)
+parseVarPar (OpenTok : restTokens1) =
+  case parseAddSub restTokens1 of
     Just (expr, (CloseTok : restTokens2)) ->
       Just (expr, restTokens2)
     _ -> Nothing -- no closing paren
-parseIntOrPar _ = Nothing
+parseVarPar _ = Nothing
 
-parseProdOrIntOrPar :: [Token] -> Maybe (Aexp, [Token])
-parseProdOrIntOrPar tokens
-  = case parseIntOrPar tokens of
+parseMult :: [Token] -> Maybe (Aexp, [Token])
+parseMult tokens
+  = case parseVarPar tokens of
     Just (expr1, (MultTok : restTokens1)) ->
-      case parseProdOrIntOrPar restTokens1 of
+      case parseMult restTokens1 of
         Just (expr2, restTokens2) ->
           Just (Multexp expr1 expr2, restTokens2)
         Nothing -> Nothing
     result -> result
 
-parseSumOrProdOrIntOrPar::[Token] -> Maybe (Aexp, [Token])
-parseSumOrProdOrIntOrPar tokens
-  = case parseProdOrIntOrPar tokens of
+parseAddSub::[Token] -> Maybe (Aexp, [Token])
+parseAddSub tokens
+  = case parseMult tokens of
+    -- if +
     Just (expr1, (PlusTok : restTokens1)) ->
-      case parseSumOrProdOrIntOrPar restTokens1 of
+      case parseAddSub restTokens1 of
         Just (expr2, restTokens2) ->
           Just (Addexp expr1 expr2, restTokens2)
         Nothing -> Nothing
+    -- if -
+    Just (expr1, (SubTok : restTokens1)) ->
+      case parseAddSub restTokens1 of
+        Just (expr2, restTokens2) ->
+          Just (Subexp expr1 expr2, restTokens2)
+        Nothing -> Nothing
     result -> result
 
-parse :: [Token] -> Aexp
-parse tokens =
-  case parseSumOrProdOrIntOrPar tokens of
+parseAexp :: String -> Aexp
+parseAexp tokens =
+  case parseAddSub (lexer tokens) of
     Just (expr, []) -> expr
     _ -> error "Parse error"
-
+    
+--parse :: [Token] -> [Stm]
+--parse
 -- To help you test your parser
 --testParser :: String -> (String, String)
 --testParser programCode = (stack2Str stack, store2Str store)
