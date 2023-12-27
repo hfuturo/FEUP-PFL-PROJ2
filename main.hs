@@ -76,14 +76,17 @@ testAssembler code = (stack2Str stack, state2Str state)
 
 -- TODO: Define the types Aexp, Bexp, Stm and Program
 
--- compA :: Aexp -> Code
-compA = undefined -- TODO
+compA :: Aexp -> Code
+compA (IntVarexp n) = [Push n]
+compA (Addexp e1 e2) = compA e1 ++ compA e2 ++ [Add]
+
+ -- TODO
 
 -- compB :: Bexp -> Code
 compB = undefined -- TODO
 
 -- compile :: Program -> Code
-compile = undefined -- TODO
+compile = undefined  -- TODO
 
 lexer :: String -> [Token]
 lexer [] = []

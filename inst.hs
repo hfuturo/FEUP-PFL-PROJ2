@@ -75,3 +75,5 @@ data Token =
   ThenTok    | WhileTok     | TrueTok      | FalseTok    | Var String deriving (Show)
 
 data Aexp = Addexp Aexp Aexp | Subexp Aexp Aexp | Multexp Aexp Aexp | IntVarexp Integer deriving (Show)
+-- data Smt = Aexp
+-- type Program = Aexp
