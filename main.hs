@@ -1,4 +1,4 @@
-import Data.List ( sort, intercalate )
+import Data.List (sort, intercalate)
 import Inst
 import Action
 import Lexer
@@ -134,14 +134,30 @@ parseAddSub tokens
         Nothing -> Nothing
     result -> result
 
-parseAexp :: String -> Aexp
+parseAexp :: [Token] -> Aexp
 parseAexp tokens =
-  case parseAddSub (lexer tokens) of
+  case parseAddSub tokens of
     Just (expr, []) -> expr
     _ -> error "Parse error"
-    
+
+nextComaPointIndex :: [Token] -> Int
+nextComaPointIndex [] = 2
+nextComaPointIndex [ComaPointTok] = 0
+nextComaPointIndex (ComaPointTok: _) = 0
+nextComaPointIndex (x:xs) = 1 + nextComaPointIndex xs
+
+parseSmt :: [Token] -> [Aexp]
+parseSmt [] = []
+parseSmt tokens
+  | index == 0 = []
+  | length tokens >= index = [parseAexp (take index tokens)] ++ (parseSmt (tail (drop index tokens)))
+  | otherwise = error "Error in parse"
+  where 
+    index = nextComaPointIndex tokens
+
 --parse :: [Token] -> [Stm]
 --parse
+
 -- To help you test your parser
 --testParser :: String -> (String, String)
 --testParser programCode = (stack2Str stack, store2Str store)
