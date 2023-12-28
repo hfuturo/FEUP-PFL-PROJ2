@@ -1,15 +1,7 @@
 import Data.List (sort, intercalate)
-import Inst
 import Action
 import Lexer
 import Debug.Trace
-
--- deal with stack
-createEmptyStack :: Stack
-createEmptyStack = []
-
-stack2Str :: Stack -> String
-stack2Str stack = intercalate "," $ map valueToStr (reverse stack)
 
 valueToStr :: Value -> String
 valueToStr (Left x) = show x
@@ -18,6 +10,13 @@ valueToStr (Right s)
   | s == "tt" = show True
   | otherwise = s
 
+-- deal with stack
+createEmptyStack :: Stack
+createEmptyStack = []
+
+stack2Str :: Stack -> String
+stack2Str stack = intercalate "," $ map valueToStr (reverse stack)
+
 -- deal with state
 createEmptyState :: State
 createEmptyState = []
@@ -25,49 +24,43 @@ createEmptyState = []
 state2Str :: State -> String
 state2Str state = intercalate "," $ map (\(x, y) -> x ++ "=" ++ (valueToStr y)) (sort state)
 
--- run :: (Code, Stack, State) -> IO (Code, Stack, State)
 run :: (Code, Stack, State) -> (Code, Stack, State)
 run ([], stack, state) = ([], stack, state)
-run ((xi:xf), stack, state)
-  | isLoop xi =
-    run (xf ++ (loopC1Var xi) ++ [Branch ((loopC2Var xi) ++ [xi]) [Noop]], stack, state)
-  | isBranch xi && (last stack) == Right "tt" = 
-    run ((branchC1Var xi) ++ xf, init stack, state)
-  | isBranch xi && (last stack) == Right "ff" = 
-    run ((branchC2Var xi) ++ xf, init stack, state)
-  | isPush xi =
-    run (xf, stack ++ [Left (pushValue xi)], state)
-  | show xi == "Noop" = 
-    run (xf, stack, state)
-  | show xi == "Fals" =
-    run (xf, stack ++ [Right "ff"], state)
-  | show xi == "Tru" =
-    run (xf, stack ++ [Right "tt"], state)
-  | isStore xi =
-    run (xf, init stack, storeOperation state (storeVar xi) (last stack))
-  | isFetch xi =
-    run (xf, stack ++ [fetchOperation state (fetchVar xi)], state)
-  | show xi == "Add" =
-    run (xf, take (length stack - 2) stack ++ [addOperation (last stack) (last (init stack))], state)
-  | show xi == "Sub" =
-    run (xf, take (length stack - 2) stack ++ [subOperation (last stack) (last (init stack))], state)
-  | show xi == "Mult" =
-    run (xf, take (length stack - 2) stack ++ [multOperation (last stack) (last (init stack))], state)
-  | show xi == "Neg" =
-    run (xf, init stack ++ [negOperation (last stack)], state)
-  | show xi == "And" =
-    run (xf, take (length stack - 2) stack ++ [andOperation (last stack) (last (init stack))], state)
-  | show xi == "Equ" =
-    run (xf, take (length stack - 2) stack ++ [(equOperation (last stack) (last (init stack)))],state)
-  | show xi == "Le" =
-    run (xf, take (length stack - 2) stack ++ [(leOperation (last (init stack)) (last stack))],state)
-  | otherwise = trace ("stack " ++ show stack ++ " state " ++ show state ++ " code " ++ show (xi:xf))$ error "Run-time error"
-
--- To help you test your assembler
--- testAssembler :: Code -> IO (String, String)
--- testAssembler code = do
---   (_, stack, state) <- run (code, createEmptyStack, createEmptyState)
---   return (stack2Str stack, state2Str state)
+run ((xi:xf), stack, state) =
+    case xi of 
+        Branch c1 c2
+          | (last stack) == Right "tt" -> run (c1 ++ xf, init stack, state)
+          | (last stack) == Right "ff" -> run (c2 ++ xf, init stack, state)
+          | otherwise -> error "Run time error"
+        Loop c1 c2 -> 
+          run (xf ++ c1 ++ [Branch (c2 ++ [xi]) [Noop]], stack, state)
+        Push val -> 
+          run (xf, stack ++ [Left val], state)
+        Noop -> 
+          run (xf, stack, state)
+        Fals -> 
+          run (xf, stack ++ [Right "ff"], state)
+        Tru -> 
+          run (xf, stack ++ [Right "tt"], state)
+        Store var -> 
+          run (xf, init stack, storeOperation state var (last stack))
+        Fetch var -> 
+          run (xf, stack ++ [fetchOperation state var], state)
+        Add -> 
+          run (xf, take (length stack - 2) stack ++ [addOperation (last stack) (last (init stack))], state)
+        Sub -> 
+          run (xf, take (length stack - 2) stack ++ [subOperation (last stack) (last (init stack))], state)
+        Mult -> 
+          run (xf, take (length stack - 2) stack ++ [multOperation (last stack) (last (init stack))], state)
+        Neg -> 
+          run (xf, init stack ++ [negOperation (last stack)], state)
+        And -> 
+          run (xf, take (length stack - 2) stack ++ [andOperation (last stack) (last (init stack))], state)
+        Equ -> 
+          run (xf, take (length stack - 2) stack ++ [(equOperation (last stack) (last (init stack)))],state)
+        Le -> 
+          run (xf, take (length stack - 2) stack ++ [(leOperation (last (init stack)) (last stack))],state)
+        _ -> error "Run-time error"
 
 -- To help you test your assembler
 testAssembler :: Code -> (String, String)
@@ -76,7 +69,6 @@ testAssembler code = (stack2Str stack, state2Str state)
 
 -- Part 2
 
--- TODO: Define the types Aexp, Bexp, Stm and Program
 data Aexp = 
   Addexp Aexp Aexp  | Subexp Aexp Aexp | 
   Multexp Aexp Aexp | IntVarexp Integer |

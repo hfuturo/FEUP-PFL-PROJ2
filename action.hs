@@ -1,5 +1,30 @@
 module Action where
-import Inst
+
+data Inst 
+    = Push Integer 
+    | Add 
+    | Mult 
+    | Sub 
+    | Tru 
+    | Fals 
+    | Equ 
+    | Le 
+    | And 
+    | Neg 
+    | Fetch String 
+    | Store String 
+    | Noop 
+    | Branch Code Code 
+    | Loop Code Code
+    deriving Show
+
+type Value = Either Integer String
+
+type Code  = [Inst]
+
+type Stack = [Value]
+
+type State = [(String,Value)]
 
 addOperation :: Value -> Value -> Value
 addOperation (Left a) (Left b) = Left (a+b)
