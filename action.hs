@@ -34,22 +34,23 @@ type State = [(String,Value)]
 -- Adds the top most value with the second topmost value of the stack
 addOperation :: Value -> Value -> Value
 addOperation (Left a) (Left b) = Left (a+b)
-addOperation _ _ = error "Error in addOperation"
+addOperation _ _ = error "Run-time error"
 
 -- Subtracts the top most value with the second topmost value of the stack
 subOperation :: Value -> Value -> Value
 subOperation (Left a) (Left b) = Left (a-b)
-subOperation _ _ = error "Error in subOperation"
+subOperation _ _ = error "Run-time error"
 
 -- Multiplies the top most value with the second topmost value of the stack
 multOperation :: Value -> Value -> Value
 multOperation (Left a) (Left b) = Left (a*b)
-multOperation _ _ = error "Error in multOperation"
+multOperation _ _ = error "Run-time error"
 
 -- Applies the logical negation to a boolean
 negOperation :: Value -> Value
 negOperation (Right "ff") = Right "tt"
 negOperation (Right "tt") = Right "ff"
+negOperation _ = error "Run-time error"
 
 -- Executes the and (&&) operation with the two topmost elements
 -- They must be booleans otherwise an error will be thrown
@@ -57,7 +58,7 @@ andOperation :: Value -> Value -> Value
 andOperation (Right a) (Right b)
     | a == "tt" && b == "tt" = Right "tt"
     | otherwise = Right "ff"
-andOperation _ _ = error "Run time error"
+andOperation _ _ = error "Run-time error"
 
 -- Gets the value of a variable
 fetchOperation :: State -> String -> Value
@@ -71,20 +72,17 @@ equOperation :: Value -> Value -> Value
 equOperation (Left a) (Left b) 
     | a == b = Right "tt"
     | otherwise = Right "ff"
-
 equOperation (Right a) (Right b)
     | a == b = Right "tt"
     | otherwise = Right "ff"
-
-equOperation _ _ = Right "ff"
+equOperation _ _ = error "Run-time error"
 
 -- Checks if the top most value is less or equal to the second topmost value of the stack
 leOperation :: Value -> Value -> Value
 leOperation (Left a) (Left b) 
     | a <= b = Right "tt"
     | otherwise = Right "ff"
-
-leOperation _ _ = Right "tt"
+leOperation _ _ = error "Run-time error"
 
 -- Checks if a variable already exists
 lookUpValueState :: State -> String -> Bool

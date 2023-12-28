@@ -35,7 +35,7 @@ run (xi:xf, stack, state) =
         Branch c1 c2
           | last stack == Right "tt" -> run (c1 ++ xf, init stack, state)
           | last stack == Right "ff" -> run (c2 ++ xf, init stack, state)
-          | otherwise -> error "Run time error"
+          | otherwise -> error "Run-time error"
         Loop c1 c2 ->
           run (xf ++ c1 ++ [Branch (c2 ++ [xi]) [Noop]], stack, state)
         Push val ->
@@ -64,7 +64,6 @@ run (xi:xf, stack, state) =
           run (xf, take (length stack - 2) stack ++ [equOperation (last stack) (last (init stack))],state)
         Le ->
           run (xf, take (length stack - 2) stack ++ [leOperation (last stack) (last (init stack))],state)
-        _ -> error "Run-time error"
 
 -- To help you test your assembler
 testAssembler :: Code -> (String, String)
