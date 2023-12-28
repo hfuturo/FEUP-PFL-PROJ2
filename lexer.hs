@@ -8,11 +8,7 @@ data Token
   | OpenTok        -- (
   | CloseTok       -- )
   | IntTok Integer -- Int
-  | ComaTok        -- ,
   | ComaPointTok   -- ;
-  | MoreTok        -- >
-  | LessTok        -- <
-  | MoreEquTok     -- >=
   | LessEquTok     -- <=
   | DoubleEquTok   -- ==
   | EquTok         -- =
@@ -38,14 +34,10 @@ lexer ('*' : restStr) = MultTok : lexer restStr
 
 lexer ('(' : restStr) = OpenTok : lexer restStr
 lexer (')' : restStr) = CloseTok : lexer restStr
-lexer (',' : restStr) = ComaTok : lexer restStr
 lexer (';' : restStr) = ComaPointTok : lexer restStr
 lexer (' ' : restStr) = lexer restStr
 
 lexer ('<' : '=' : restStr) = LessEquTok : lexer restStr
-lexer ('<' : restStr)       = LessTok : lexer restStr
-lexer ('>' : '=' : restStr) = MoreEquTok : lexer restStr
-lexer ('>' : restStr)       = MoreTok : lexer restStr
 lexer (':' : '=' : restStr) = PointEquTok : lexer restStr
 lexer ('=' : '=' : restStr) = DoubleEquTok : lexer restStr
 lexer ('=' : restStr)       = EquTok : lexer restStr
