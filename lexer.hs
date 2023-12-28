@@ -1,7 +1,7 @@
 module Lexer where
 import Data.Char (isDigit, digitToInt, isAlpha)
 
-data Token 
+data Token
   = PlusTok        -- +
   | MultTok        -- *
   | SubTok         -- -
@@ -22,7 +22,7 @@ data Token
   | FalseTok       -- false
   | NotTok         -- not
   | AndTok         -- and
-  | VarTok String 
+  | VarTok String
   deriving (Show)
 
 lexer :: String -> [Token]
@@ -54,12 +54,12 @@ lexer ('a' : 'n' : 'd' : restStr)             = AndTok : lexer restStr
 
 
 lexer (chr : string)
-  | isDigit chr = (IntTok (read digitStr)) : lexer restDigitStr
-  | isAlpha chr = (VarTok alphaStr) : lexer restAlphaStr
+  | isDigit chr = IntTok (read digitStr) : lexer restDigitStr
+  | isAlpha chr = VarTok alphaStr : lexer restAlphaStr
   | otherwise = error ("Invalid character: " ++ show chr)
   where
-    (alphaStr, restAlphaStr) = break (not . isAlpha) (chr : string)
-    (digitStr, restDigitStr) = break (not . isDigit) (chr : string)
+    (alphaStr, restAlphaStr) = span isAlpha (chr : string)
+    (digitStr, restDigitStr) = span isDigit (chr : string)
 
 stringToInt :: String -> Int
-stringToInt = foldl (\acc chr -> 10 * acc + digitToInt chr) 0  
+stringToInt = foldl (\acc chr -> 10 * acc + digitToInt chr) 0

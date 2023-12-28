@@ -2,12 +2,12 @@ module Parser where
 import Lexer
 import Debug.Trace
 
-data Aexp 
+data Aexp
     = AddAexp Aexp Aexp
-    | SubAexp Aexp Aexp 
+    | SubAexp Aexp Aexp
     | MultAexp Aexp Aexp
     | IntAexp Integer
-    | VarAexp String 
+    | VarAexp String
     deriving (Show)
 
 data Bexp
@@ -21,8 +21,8 @@ data Bexp
   | AndBexp Bexp Bexp
   deriving (Show)
 
-data Stm 
-  = StoreAStm String Aexp 
+data Stm
+  = StoreAStm String Aexp
   | StoreBStm String Bexp
   | IfStm Bexp [Stm] [Stm]
   | LoopStm Bexp [Stm]
@@ -36,7 +36,7 @@ parseVarPar (IntTok n : restTokens) = Just (IntAexp n, restTokens)
 parseVarPar (VarTok n : restTokens) = Just (VarAexp n, restTokens)
 parseVarPar (OpenTok : restTokens1) =
   case parseAddSub restTokens1 of
-    Just (expr, (CloseTok : restTokens2)) ->
+    Just (expr, CloseTok : restTokens2) ->
       Just (expr, restTokens2)
     _ -> Nothing
 parseVarPar _ = Nothing
@@ -45,7 +45,7 @@ parseVarPar _ = Nothing
 parseMult :: [Token] -> Maybe (Aexp, [Token])
 parseMult tokens
   = case parseVarPar tokens of
-    Just (expr1, (MultTok : restTokens1)) ->
+    Just (expr1, MultTok : restTokens1) ->
       case parseMult restTokens1 of
         Just (expr2, restTokens2) ->
           Just (MultAexp expr1 expr2, restTokens2)
@@ -57,13 +57,13 @@ parseAddSub::[Token] -> Maybe (Aexp, [Token])
 parseAddSub tokens
   = case parseMult tokens of
     -- if +
-    Just (expr1, (PlusTok : restTokens1)) ->
+    Just (expr1, PlusTok : restTokens1) ->
       case parseAddSub restTokens1 of
         Just (expr2, restTokens2) ->
           Just (AddAexp expr1 expr2, restTokens2)
         Nothing -> Nothing
     -- if -
-    Just (expr1, (SubTok : restTokens1)) ->
+    Just (expr1, SubTok : restTokens1) ->
       case parseAddSub restTokens1 of
         Just (expr2, restTokens2) ->
           Just (SubAexp expr1 expr2, restTokens2)
@@ -82,28 +82,28 @@ parseBoolPar (TrueTok : restTokens) = Just (TrueBexp, restTokens)
 parseBoolPar (FalseTok : restTokens) = Just (FalseBexp, restTokens)
 parseBoolPar (OpenTok : restTokens1) =
   case parseAndEq restTokens1 of
-    Just (expr, (CloseTok : restTokens2)) ->
+    Just (expr, CloseTok : restTokens2) ->
       Just (expr, restTokens2)
     _ -> Nothing
 
 -- case that bool has aritmetic expression within
 parseBoolPar tokens
   = case parseAddSub tokens of
-      Just (expr1, (LessEquTok : restTokens1)) ->
+      Just (expr1, LessEquTok : restTokens1) ->
         case parseAddSub restTokens1 of
           Just (expr2, restTokens2) ->
             Just (LeBexp expr1 expr2, restTokens2)
           Nothing -> Nothing
-      Just (expr1, (DoubleEquTok : restTokens1)) ->
+      Just (expr1, DoubleEquTok : restTokens1) ->
         case parseAddSub restTokens1 of
           Just (expr2, restTokens2) ->
             Just (EqABexp expr1 expr2, restTokens2)
           Nothing -> Nothing
-      Just ((VarAexp var), (EquTok : restTokens1))
-        -> Just (VarBexp var,(EquTok : restTokens1))
-      Just ((VarAexp var), (AndTok : restTokens1))
-        -> Just (VarBexp var,(AndTok : restTokens1))
-      Just ((VarAexp var),[])
+      Just (VarAexp var, EquTok : restTokens1)
+        -> Just (VarBexp var,EquTok : restTokens1)
+      Just (VarAexp var, AndTok : restTokens1)
+        -> Just (VarBexp var,AndTok : restTokens1)
+      Just (VarAexp var,[])
         -> Just (VarBexp var,[])
 
 -- Bexp : deal with negations
@@ -117,14 +117,14 @@ parseNot tokens = parseBoolPar tokens
 
 -- Bexp : deal with and and equal operations
 parseAndEq :: [Token] -> Maybe (Bexp, [Token])
-parseAndEq tokens = 
+parseAndEq tokens =
   case parseNot tokens of
-    Just (expr1, (EquTok : restTokens1)) ->
+    Just (expr1, EquTok : restTokens1) ->
       case parseAndEq restTokens1 of
         Just (expr2, restTokens2) ->
            Just (EqBBexp expr1 expr2, restTokens2)
         Nothing -> Nothing
-    Just (expr1, (AndTok : restTokens1)) ->
+    Just (expr1, AndTok : restTokens1) ->
       case parseAndEq restTokens1 of
         Just (expr2, restTokens2) ->
           Just (AndBexp expr1 expr2, restTokens2)
@@ -146,21 +146,21 @@ nextComaPointIndex (x:xs) = 1 + nextComaPointIndex xs
 
 -- search for index of a specific Token in a independent code block (that is why we check the number of "(" and ")")
 indexTok :: [Token] -> Token -> Int -> Int
-indexTok (OpenTok:xs) token number = 1 + (indexTok xs token (number + 1))
-indexTok (CloseTok:xs) token number = 1 + (indexTok xs token (number - 1))
+indexTok (OpenTok:xs) token number = 1 + indexTok xs token (number + 1)
+indexTok (CloseTok:xs) token number = 1 + indexTok xs token (number - 1)
 indexTok (ElseTok:_) ElseTok 0 = 0
 indexTok (ThenTok:_) ThenTok 0 = 0
 indexTok (DoTok:_) DoTok 0 = 0
-indexTok (x:xs) token number = 1 + (indexTok xs token number)
+indexTok (x:xs) token number = 1 + indexTok xs token number
 
 -- search for the end of the code block in an else block (because there is no specific Token that indicates the end of it)
 endIndex :: [Token] -> Int -> Int
-endIndex (OpenTok:xs) number = 1 + (endIndex xs (number + 1))
-endIndex (CloseTok:xs) number = 1 + (endIndex xs (number - 1))
-endIndex (ComaPointTok:xs) number 
+endIndex (OpenTok:xs) number = 1 + endIndex xs (number + 1)
+endIndex (CloseTok:xs) number = 1 + endIndex xs (number - 1)
+endIndex (ComaPointTok:xs) number
   | number == 0 = 1
-  | otherwise = 1 + (endIndex xs number)
-endIndex (x:xs) number = 1 + (endIndex xs number)
+  | otherwise = 1 + endIndex xs number
+endIndex (x:xs) number = 1 + endIndex xs number
 
 -- check if Stm is has a boolean expression within
 checkBool :: [Token] -> Bool
@@ -175,14 +175,14 @@ parseStm :: [Token] -> Program
 parseStm [] = []
 parseStm (VarTok n : PointEquTok : restToken)
   | index == 0 = []
-  | length restToken >= index && (checkBool (take index restToken)) == False = [StoreAStm n (parseAexp (take index restToken))] ++ parseStm (tail (drop index restToken))
-  | length restToken >= index && (checkBool (take index restToken)) == True = [StoreBStm n (parseBexp (take index restToken))] ++ parseStm (tail (drop index restToken))
+  | length restToken >= index && not (checkBool (take index restToken)) = StoreAStm n (parseAexp (take index restToken)) : parseStm (tail (drop index restToken))
+  | length restToken >= index && checkBool (take index restToken) = StoreBStm n (parseBexp (take index restToken)) : parseStm (tail (drop index restToken))
   | otherwise = error "Error in parse"
   where index = nextComaPointIndex restToken
 
 parseStm (IfTok : restToken)
   | indexThen == 0 = []
-  | length restToken >= indexThen = [IfStm (parseBexp expThen) (parseStm expElse) (parseStm expEnd)] ++ parseStm ((drop (indexThen + indexElse + indexComa + 2) restToken))
+  | length restToken >= indexThen = IfStm (parseBexp expThen) (parseStm expElse) (parseStm expEnd) : parseStm (drop (indexThen + indexElse + indexComa + 2) restToken)
   | otherwise = error "Error in parse"
   where
     indexThen = indexTok restToken ThenTok 0
