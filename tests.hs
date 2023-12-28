@@ -7,8 +7,11 @@ import Action
 
 import Data.List (elemIndices)
 
+-- Data type outputed by test functions
+-- True if all tests succeed or a list with the indeces of the tests that failed.
 type TestResults = Either Bool [Int]
 
+-- Run all assembler tests
 runAssemblerTests :: TestResults
 runAssemblerTests
     = if and results then Left True else Right (map (+1) (elemIndices False results))
@@ -26,10 +29,11 @@ runAssemblerTests
                     [testAssembler [Tru, Tru, Branch [Branch [Fals,Store "var",Fetch "var"] [Push (-20),Tru,Fals]] [Push (-20),Tru,Tru,Neg,Equ]] == ("False","var=False")] ++
                     [testAssembler [Tru, Branch [Fals, Branch [Fals,Store "var",Fetch "var"] [Push (-20),Tru,Fals]] [Push (-20),Tru,Tru,Neg,Equ]] == ("False,True,-20","")]
 
--- Tests que dao return a "Run-time error"
+-- Testes que dao return a "Run-time error"
 -- yes: testAssembler [Push 1,Push 2,And] == "Run-time error"
 -- yes: testAssembler [Tru,Tru,Store "y", Fetch "x",Tru] == "Run-time error"
 
+-- Run all parser tests
 runParserTests :: TestResults
 runParserTests
     = if and results then Left True else Right (map (+1) (elemIndices False results))

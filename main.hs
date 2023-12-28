@@ -3,6 +3,7 @@ import Action
 import Parser
 import Debug.Trace
 
+-- Converts a Value variable into a String
 valueToStr :: Value -> String
 valueToStr (Left x) = show x
 valueToStr (Right s)
@@ -10,20 +11,23 @@ valueToStr (Right s)
   | s == "tt" = show True
   | otherwise = s
 
--- deal with stack
+-- Creates an empty Stack
 createEmptyStack :: Stack
 createEmptyStack = []
 
+-- Converts a Stack variable into a String
 stack2Str :: Stack -> String
 stack2Str stack = intercalate "," $ map valueToStr (reverse stack)
 
--- deal with state
+-- Creates an empty State
 createEmptyState :: State
 createEmptyState = []
 
+-- Converts a State variable into a String
 state2Str :: State -> String
 state2Str state = intercalate "," $ map (\(x, y) -> x ++ "=" ++ valueToStr y) (sort state)
 
+-- Interpreter which processes a list of instructions
 run :: (Code, Stack, State) -> (Code, Stack, State)
 run ([], stack, state) = ([], stack, state)
 run (xi:xf, stack, state) =
@@ -68,6 +72,8 @@ testAssembler code = (stack2Str stack, state2Str state)
   where (_,stack,state) = run (code, createEmptyStack, createEmptyState)
 
 -- Part 2
+
+-- Compiles an arithmetic expression
 compA :: Aexp -> Code
 compA (IntAexp n) = [Push n]
 compA (VarAexp n) = [Fetch n]
@@ -75,6 +81,7 @@ compA (AddAexp e1 e2) = compA e2 ++ compA e1 ++ [Add]
 compA (SubAexp e1 e2) = compA e2 ++ compA e1 ++ [Sub]
 compA (MultAexp e1 e2) = compA e2 ++ compA e1 ++ [Mult]
 
+-- Compiles a boolean expression
 compB :: Bexp -> Code
 compB FalseBexp = [Fals]
 compB TrueBexp = [Tru]
@@ -85,6 +92,7 @@ compB (EqBBexp bexp1 bexp2) = compB bexp1 ++ compB bexp2 ++ [Equ]
 compB (NotBexp bexp) = compB bexp ++ [Neg]
 compB (AndBexp bexp1 bexp2) = compB bexp1 ++ compB bexp2 ++ [And]
 
+-- Compiles an expression
 compile :: Program -> Code
 compile [] = []
 compile ((StoreAStm var aexp): restProgram) = compA aexp ++ [Store var] ++ compile restProgram
@@ -92,6 +100,7 @@ compile ((StoreBStm var bexp): restProgram) = compB bexp ++ [Store var] ++ compi
 compile ((IfStm bexp code1 code2): restProgram) = compB bexp ++ [Branch (compile code1) (compile code2)] ++ compile restProgram
 compile ((LoopStm bexp code): restProgram) = Loop (compB bexp) (compile code) : compile restProgram
 
+-- To help you test your parser
 testParser :: String -> (String, String)
 testParser programCode = (stack2Str stack, state2Str store)
   where (_,stack,store) = run (compile (parse programCode), createEmptyStack, createEmptyState)

@@ -2,32 +2,36 @@ module Parser where
 import Lexer
 import Debug.Trace
 
+-- Data type that represents an arithmetic expression
 data Aexp
-    = AddAexp Aexp Aexp
-    | SubAexp Aexp Aexp
-    | MultAexp Aexp Aexp
-    | IntAexp Integer
-    | VarAexp String
+    = AddAexp Aexp Aexp     -- Add
+    | SubAexp Aexp Aexp     -- Subtraction
+    | MultAexp Aexp Aexp    -- Multiply
+    | IntAexp Integer       -- Numbers
+    | VarAexp String        -- Variable
     deriving (Show)
 
+-- Data type that represents a boolean expression
 data Bexp
-  = TrueBexp
-  | FalseBexp
-  | VarBexp String
-  | LeBexp Aexp Aexp
-  | EqABexp Aexp Aexp
-  | EqBBexp Bexp Bexp
-  | NotBexp Bexp
-  | AndBexp Bexp Bexp
+  = TrueBexp            -- True
+  | FalseBexp           -- False
+  | VarBexp String      -- Variable
+  | LeBexp Aexp Aexp    -- <=
+  | EqABexp Aexp Aexp   -- ==
+  | EqBBexp Bexp Bexp   -- =
+  | NotBexp Bexp        -- not
+  | AndBexp Bexp Bexp   -- and
   deriving (Show)
 
+-- Data type that represents statements
 data Stm
-  = StoreAStm String Aexp
-  | StoreBStm String Bexp
-  | IfStm Bexp [Stm] [Stm]
-  | LoopStm Bexp [Stm]
+  = StoreAStm String Aexp     -- Stores a variable (for arithmetic)
+  | StoreBStm String Bexp     -- Stores a variable (for boolean)
+  | IfStm Bexp [Stm] [Stm]    -- If condition
+  | LoopStm Bexp [Stm]        -- While loop
   deriving (Show)
 
+-- Synonym for a list of Statements
 type Program = [Stm]
 
 -- Aexp : deal with variables and parenteses
@@ -70,6 +74,7 @@ parseAddSub tokens
         Nothing -> Nothing
     result -> result
 
+-- Parses a list of Tokens that represent an arithmetic expressions
 parseAexp :: [Token] -> Aexp
 parseAexp tokens =
   case parseAddSub tokens of
@@ -131,6 +136,7 @@ parseAndEq tokens =
         Nothing -> Nothing
     result -> result
 
+-- Parses a list of Tokens that represent a boolean expression
 parseBexp :: [Token] -> Bexp
 parseBexp tokens =
   case parseAndEq tokens of
@@ -171,6 +177,7 @@ checkBool (LessEquTok:_) = True
 checkBool (DoubleEquTok:_) = True
 checkBool (x:xs) = checkBool xs
 
+-- Converts the list of Tokens given by lexer into a list of Stm ready to be used by the compiler
 parseStm :: [Token] -> Program
 parseStm [] = []
 parseStm (VarTok n : PointEquTok : restToken)
@@ -210,6 +217,7 @@ parseStm (ThenTok : restToken) = parseStm (restToken ++ [ComaPointTok])
 parseStm (OpenTok : restToken) = parseStm restToken
 parseStm (CloseTok : restToken) = parseStm (tail restToken) -- tira )
 
+-- Parses the input string given by the user
 parse :: String -> Program
 parse [] = []
 parse text = parseStm (lexer text)
