@@ -13,6 +13,7 @@ data Aexp
 data Bexp
   = Trueexp
   | Falseexp
+  | VarBexp String
   | Leexp Aexp Aexp
   | EqAexp Aexp Aexp
   | EqBexo Bexp Bexp
@@ -22,6 +23,7 @@ data Bexp
 
 data Stm 
   = Storexp String Aexp 
+  | StorBexp String Bexp
   | Ifexp Bexp [Stm] [Stm]
   | Loopexp Bexp [Stm]
   deriving (Show)
@@ -72,6 +74,7 @@ parseAexp tokens =
     _ -> error "Parse error"
 
 parseB :: [Token] -> Maybe (Bexp, [Token])
+--parseB ((VarTok n):restTokens) = Just (VarBexp n, restTokens)
 parseB (TrueTok : restTokens) = Just (Trueexp, restTokens)
 parseB (FalseTok : restTokens) = Just (Falseexp, restTokens)
 parseB (OpenTok : restTokens1) =
@@ -107,7 +110,7 @@ parseB2 tokens =
     Just (expr1, (EquTok : restTokens1)) ->
       case parseB2 restTokens1 of
         Just (expr2, restTokens2) ->
-          Just (EqBexo expr1 expr2, restTokens2)
+           Just (EqBexo expr1 expr2, restTokens2)
         Nothing -> Nothing
     Just (expr1, (AndTok : restTokens1)) ->
       case parseB2 restTokens1 of
@@ -145,11 +148,20 @@ endIndex (ComaPointTok:xs) number
   | otherwise = 1 + (endIndex xs number)
 endIndex (x:xs) number = 1 + (endIndex xs number)
 
+checkBool :: [Token] -> Bool
+checkBool [] = False
+checkBool (TrueTok:_) = True
+checkBool (FalseTok:_) = True
+checkBool (LessEquTok:_) = True
+checkBool (DoubleEquTok:_) = True
+checkBool (x:xs) = checkBool xs
+
 parseSmt :: [Token] -> Program
 parseSmt [] = []
 parseSmt (VarTok n : PointEquTok : restToken)
   | index == 0 = []
-  | length restToken >= index = [Storexp n (parseAexp (take index restToken))] ++ parseSmt (tail (drop index restToken))
+  | length restToken >= index && (checkBool (take index restToken)) == False = [Storexp n (parseAexp (take index restToken))] ++ parseSmt (tail (drop index restToken))
+  | length restToken >= index && (checkBool (take index restToken)) == True = [StorBexp n (parseBexp (take index restToken))] ++ parseSmt (tail (drop index restToken))
   | otherwise = error "Error in parse"
   where index = nextComaPointIndex restToken
 

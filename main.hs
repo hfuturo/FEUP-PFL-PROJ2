@@ -78,6 +78,7 @@ compA (Multexp e1 e2) = compA e2 ++ compA e1 ++ [Mult]
 compB :: Bexp -> Code
 compB (Falseexp) = [Fals]
 compB (Trueexp) = [Tru]
+compB (VarBexp n) = [Fetch n]
 compB (Leexp aexp1 aexp2) = compA aexp2 ++ compA aexp1 ++ [Le]
 compB (EqAexp aexp1 aexp2) = compA aexp1 ++ compA aexp2 ++ [Equ]
 compB (EqBexo bexp1 bexp2) = compB bexp1 ++ compB bexp2 ++ [Equ]
@@ -87,6 +88,7 @@ compB (Andexp bexp1 bexp2) = compB bexp1 ++ compB bexp2 ++ [And]
 compile :: Program -> Code
 compile [] = []
 compile ((Storexp var aexp): restProgram) = compA aexp ++ [Store var] ++ compile restProgram
+compile ((StorBexp var bexp): restProgram) = compB bexp ++ [Store var] ++ compile restProgram
 compile ((Ifexp bexp code1 code2): restProgram) = compB bexp ++ [Branch (compile code1) (compile code2)] ++ compile restProgram
 compile ((Loopexp bexp code): restProgram) = [Loop (compB bexp) (compile code)] ++ compile restProgram
 

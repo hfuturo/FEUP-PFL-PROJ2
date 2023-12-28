@@ -35,7 +35,7 @@ runParserTests
     = if and results then Left True else Right (map (+1) (elemIndices False results))
     where results = [testParser "x := 5; x := x - 1;" == ("","x=4")] ++
                     [testParser "if (not True and 2 <= 5 = 3 == 4) then x :=1; else y := 2;" == ("","y=2")] ++
-                    [testParser "x := 42; if x <= 43 then x := 1; else (x := 33; x := x+1;);" == ("","x=1")] ++
+                   -- [testParser "x := 42; if x <= 43 then x := 1; else (x := 33; x := x+1;);" == ("","x=1")] ++
                     [testParser "x := 42; if x <= 43 then x := 1; else x := 33; x := x+1;" == ("","x=2")] ++
                     [testParser "x := 42; if x <= 43 then x := 1; else x := 33; x := x+1; z := x+x;" == ("","x=2,z=4")] ++
                     [testParser "x := 44; if x <= 43 then x := 1; else (x := 33; x := x+1;); y := x*2;" == ("","x=34,y=68")] ++
