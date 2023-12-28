@@ -18,6 +18,12 @@ negOperation (Right "ff") = Right "tt"
 negOperation (Right "tt") = Right "ff"
 negOperation (Left a) = Left (-a)
 
+andOperation :: Value -> Value -> Value
+andOperation (Right a) (Right b)
+    | a == "tt" && b == "tt" = Right "tt"
+    | otherwise = Right "ff"
+andOperation _ _ = error "Run time error"
+
 fetchOperation :: State -> String -> Value
 fetchOperation [] string = error "Run-time error"
 fetchOperation ((a,b):xs) string

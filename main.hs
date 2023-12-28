@@ -55,11 +55,13 @@ run ((xi:xf), stack, state)
     run (xf, take (length stack - 2) stack ++ [multOperation (last stack) (last (init stack))], state)
   | show xi == "Neg" =
     run (xf, init stack ++ [negOperation (last stack)], state)
+  | show xi == "And" =
+    run (xf, take (length stack - 2) stack ++ [andOperation (last stack) (last (init stack))], state)
   | show xi == "Equ" =
     run (xf, take (length stack - 2) stack ++ [(equOperation (last stack) (last (init stack)))],state)
   | show xi == "Le" =
     run (xf, take (length stack - 2) stack ++ [(leOperation (last (init stack)) (last stack))],state)
-  | otherwise = error "Run-time error"
+  | otherwise = trace ("stack " ++ show stack ++ " state " ++ show state ++ " code " ++ show (xi:xf))$ error "Run-time error"
 
 -- To help you test your assembler
 -- testAssembler :: Code -> IO (String, String)
