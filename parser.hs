@@ -1,5 +1,6 @@
 module Parser where
 import Lexer
+import Debug.Trace
 
 data Aexp 
     = Addexp Aexp Aexp
@@ -22,6 +23,7 @@ data Bexp
 data Stm 
   = Storexp String Aexp 
   | Ifexp Bexp [Stm] [Stm]
+  | Loopexp Bexp [Stm]
   deriving (Show)
 
 type Program = [Stm]
@@ -151,6 +153,14 @@ endIndex (ComaPointTok:xs) number
   | otherwise = 1 + (endIndex xs number)
 endIndex (x:xs) number = 1 + (endIndex xs number)
 
+doIndex :: [Token] -> Int -> Int
+doIndex (OpenTok:xs) number = 1 + (doIndex xs (number + 1))
+doIndex (CloseTok:xs) number = 1 + (doIndex xs (number - 1))
+doIndex (DoTok:xs) number 
+  | number == 0 = 0
+  | otherwise = 1 + (doIndex xs number)
+doIndex (x:xs) number = 1 + (doIndex xs number)
+
 parseSmt :: [Token] -> Program
 parseSmt [] = []
 parseSmt (VarTok n : PointEquTok : restToken)
@@ -171,8 +181,19 @@ parseSmt (IfTok : restToken)
     indexComa = endIndex (tail (drop indexElse (tail (drop indexThen restToken)))) 0
     expEnd = take indexComa (drop indexElse (tail (drop indexThen restToken)))
 
+parseSmt (WhileTok : restToken)
+  | indexDo == 0 = []
+  | length restToken >= indexDo = [Loopexp (parseBexp expDo) (parseSmt expEnd)] -- ++ parseSmt (drop (indexDo + indexComa + 1) restToken)
+  | otherwise = error "Error in parse"
+  where
+    indexDo = doIndex restToken 0
+    expDo = take indexDo restToken
+    indexComa = endIndex (tail (drop indexDo restToken)) 0
+    expEnd = take indexComa (drop indexDo restToken)
+
 parseSmt (ElseTok : OpenTok : restToken) = parseSmt (init restToken) -- tira )
 parseSmt (ThenTok : OpenTok : restToken) = parseSmt restToken
+parseSmt (DoTok : OpenTok : restToken) = parseSmt (init restToken) -- tira )
 parseSmt (ElseTok : restToken) = parseSmt (restToken ++ [ComaPointTok])
 parseSmt (ThenTok : restToken) = parseSmt (restToken ++ [ComaPointTok])
 

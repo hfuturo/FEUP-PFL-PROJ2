@@ -88,6 +88,7 @@ compile :: Program -> Code
 compile [] = []
 compile ((Storexp var aexp): restProgram) = compA aexp ++ [Store var] ++ compile restProgram
 compile ((Ifexp bexp code1 code2): restProgram) = compB bexp ++ [Branch (compile code1) (compile code2)] ++ compile restProgram
+compile ((Loopexp bexp code): restProgram) = [Loop (compB bexp) (compile code)] ++ compile restProgram
 
 testParser :: String -> (String, String)
 testParser programCode = (stack2Str stack, state2Str store)

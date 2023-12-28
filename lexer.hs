@@ -21,6 +21,7 @@ data Token
   | ElseTok        -- else
   | ThenTok        -- then
   | WhileTok       -- while
+  | DoTok          -- do
   | TrueTok        -- true
   | FalseTok       -- false
   | NotTok         -- not
@@ -53,6 +54,7 @@ lexer ('i' : 'f' : restStr)                   = IfTok : lexer restStr
 lexer ('e' : 'l' : 's' : 'e' : restStr)       = ElseTok : lexer restStr
 lexer ('t' : 'h' : 'e' : 'n' : restStr)       = ThenTok : lexer restStr
 lexer ('w' : 'h' : 'i' : 'l' : 'e' : restStr) = WhileTok : lexer restStr
+lexer ('d' : 'o' : restStr)                   = DoTok : lexer restStr
 lexer ('T' : 'r' : 'u' : 'e' : restStr)       = TrueTok : lexer restStr
 lexer ('F' : 'a' : 'l' : 's' : 'e' : restStr) = FalseTok : lexer restStr
 lexer ('n' : 'o' : 't' : restStr)             = NotTok : lexer restStr
