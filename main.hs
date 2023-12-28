@@ -69,28 +69,28 @@ testAssembler code = (stack2Str stack, state2Str state)
 
 -- Part 2
 compA :: Aexp -> Code
-compA (IntVarexp n) = [Push n]
-compA (StringVarexp n) = [Fetch n]
-compA (Addexp e1 e2) = compA e2 ++ compA e1 ++ [Add]
-compA (Subexp e1 e2) = compA e2 ++ compA e1 ++ [Sub]
-compA (Multexp e1 e2) = compA e2 ++ compA e1 ++ [Mult]
+compA (IntAexp n) = [Push n]
+compA (VarAexp n) = [Fetch n]
+compA (AddAexp e1 e2) = compA e2 ++ compA e1 ++ [Add]
+compA (SubAexp e1 e2) = compA e2 ++ compA e1 ++ [Sub]
+compA (MultAexp e1 e2) = compA e2 ++ compA e1 ++ [Mult]
 
 compB :: Bexp -> Code
-compB (Falseexp) = [Fals]
-compB (Trueexp) = [Tru]
+compB (FalseBexp) = [Fals]
+compB (TrueBexp) = [Tru]
 compB (VarBexp n) = [Fetch n]
-compB (Leexp aexp1 aexp2) = compA aexp2 ++ compA aexp1 ++ [Le]
-compB (EqAexp aexp1 aexp2) = compA aexp1 ++ compA aexp2 ++ [Equ]
-compB (EqBexo bexp1 bexp2) = compB bexp1 ++ compB bexp2 ++ [Equ]
-compB (Notexp bexp) = compB bexp ++ [Neg]
-compB (Andexp bexp1 bexp2) = compB bexp1 ++ compB bexp2 ++ [And]
+compB (LeBexp aexp1 aexp2) = compA aexp2 ++ compA aexp1 ++ [Le]
+compB (EqABexp aexp1 aexp2) = compA aexp1 ++ compA aexp2 ++ [Equ]
+compB (EqBBexp bexp1 bexp2) = compB bexp1 ++ compB bexp2 ++ [Equ]
+compB (NotBexp bexp) = compB bexp ++ [Neg]
+compB (AndBexp bexp1 bexp2) = compB bexp1 ++ compB bexp2 ++ [And]
 
 compile :: Program -> Code
 compile [] = []
-compile ((Storexp var aexp): restProgram) = compA aexp ++ [Store var] ++ compile restProgram
-compile ((StorBexp var bexp): restProgram) = compB bexp ++ [Store var] ++ compile restProgram
-compile ((Ifexp bexp code1 code2): restProgram) = compB bexp ++ [Branch (compile code1) (compile code2)] ++ compile restProgram
-compile ((Loopexp bexp code): restProgram) = [Loop (compB bexp) (compile code)] ++ compile restProgram
+compile ((StoreAStm var aexp): restProgram) = compA aexp ++ [Store var] ++ compile restProgram
+compile ((StoreBStm var bexp): restProgram) = compB bexp ++ [Store var] ++ compile restProgram
+compile ((IfStm bexp code1 code2): restProgram) = compB bexp ++ [Branch (compile code1) (compile code2)] ++ compile restProgram
+compile ((LoopStm bexp code): restProgram) = [Loop (compB bexp) (compile code)] ++ compile restProgram
 
 testParser :: String -> (String, String)
 testParser programCode = (stack2Str stack, state2Str store)
