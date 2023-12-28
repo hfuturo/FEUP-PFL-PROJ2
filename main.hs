@@ -47,7 +47,7 @@ run (xi:xf, stack, state) =
         Tru ->
           run (xf, stack ++ [Right "tt"], state)
         Store var
-          | length stack >= 1 -> run (xf, init stack, storeOperation state var (last stack))
+          | not (null stack) -> run (xf, init stack, storeOperation state var (last stack))
           | otherwise -> error "Run-time error"
         Fetch var ->
           run (xf, stack ++ [fetchOperation state var], state)
@@ -61,7 +61,7 @@ run (xi:xf, stack, state) =
           | length stack >= 2 -> run (xf, take (length stack - 2) stack ++ [multOperation (last stack) (last (init stack))], state)
           | otherwise -> error "Run-time error"
         Neg
-          | length stack >= 1 -> run (xf, init stack ++ [negOperation (last stack)], state)
+          | not (null stack) -> run (xf, init stack ++ [negOperation (last stack)], state)
           | otherwise -> error "Run-time error"
         And
           | length stack >= 2 -> run (xf, take (length stack - 2) stack ++ [andOperation (last stack) (last (init stack))], state)
