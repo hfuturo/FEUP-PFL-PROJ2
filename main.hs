@@ -46,24 +46,32 @@ run (xi:xf, stack, state) =
           run (xf, stack ++ [Right "ff"], state)
         Tru ->
           run (xf, stack ++ [Right "tt"], state)
-        Store var ->
-          run (xf, init stack, storeOperation state var (last stack))
+        Store var
+          | length stack >= 1 -> run (xf, init stack, storeOperation state var (last stack))
+          | otherwise -> error "Run-time error"
         Fetch var ->
           run (xf, stack ++ [fetchOperation state var], state)
-        Add ->
-          run (xf, take (length stack - 2) stack ++ [addOperation (last stack) (last (init stack))], state)
-        Sub ->
-          run (xf, take (length stack - 2) stack ++ [subOperation (last stack) (last (init stack))], state)
-        Mult ->
-          run (xf, take (length stack - 2) stack ++ [multOperation (last stack) (last (init stack))], state)
-        Neg ->
-          run (xf, init stack ++ [negOperation (last stack)], state)
-        And ->
-          run (xf, take (length stack - 2) stack ++ [andOperation (last stack) (last (init stack))], state)
-        Equ ->
-          run (xf, take (length stack - 2) stack ++ [equOperation (last stack) (last (init stack))],state)
-        Le ->
-          run (xf, take (length stack - 2) stack ++ [leOperation (last stack) (last (init stack))],state)
+        Add
+          | length stack >= 2 -> run (xf, take (length stack - 2) stack ++ [addOperation (last stack) (last (init stack))], state)
+          | otherwise -> error "Run-time error"
+        Sub
+          | length stack >= 2 -> run (xf, take (length stack - 2) stack ++ [subOperation (last stack) (last (init stack))], state)
+          | otherwise -> error "Run-time error"
+        Mult
+          | length stack >= 2 -> run (xf, take (length stack - 2) stack ++ [multOperation (last stack) (last (init stack))], state)
+          | otherwise -> error "Run-time error"
+        Neg
+          | length stack >= 1 -> run (xf, init stack ++ [negOperation (last stack)], state)
+          | otherwise -> error "Run-time error"
+        And
+          | length stack >= 2 -> run (xf, take (length stack - 2) stack ++ [andOperation (last stack) (last (init stack))], state)
+          | otherwise -> error "Run-time error"
+        Equ
+          | length stack >= 2 -> run (xf, take (length stack - 2) stack ++ [equOperation (last stack) (last (init stack))],state)
+          | otherwise -> error "Run-time error"
+        Le
+          | length stack >= 2 -> run (xf, take (length stack - 2) stack ++ [leOperation (last stack) (last (init stack))],state)
+          | otherwise -> error "Run-time error"
 
 -- To help you test your assembler
 testAssembler :: Code -> (String, String)
