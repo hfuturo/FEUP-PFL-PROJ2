@@ -58,7 +58,7 @@ run ((xi:xf), stack, state)
   | show xi == "Equ" =
     run (xf, take (length stack - 2) stack ++ [(equOperation (last stack) (last (init stack)))],state)
   | show xi == "Le" =
-    run (xf, take (length stack - 2) stack ++ [(leOperation (last stack) (last (init stack)))],state)
+    run (xf, take (length stack - 2) stack ++ [(leOperation (last (init stack)) (last stack))],state)
   | otherwise = error "Run-time error"
 
 -- To help you test your assembler
@@ -81,8 +81,10 @@ data Aexp =
   StringVarexp String 
   deriving (Show)
 
-data Stm = 
-  Storexp String Aexp deriving (Show)
+data Stm 
+  = Storexp String Aexp 
+  | Ifexp Bexp [Stm] [Stm]
+  deriving (Show)
 type Program = [Stm]
 
 compA :: Aexp -> Code
@@ -92,12 +94,19 @@ compA (Addexp e1 e2) = compA e2 ++ compA e1 ++ [Add]
 compA (Subexp e1 e2) = compA e2 ++ compA e1 ++ [Sub]
 compA (Multexp e1 e2) = compA e2 ++ compA e1 ++ [Mult]
 
--- compB :: Bexp -> Code
-compB = undefined -- TODO
+compB :: Bexp -> Code
+compB (Falseexp) = [Fals]
+compB (Trueexp) = [Tru]
+compB (Leexp aexp1 aexp2) = compA aexp1 ++ compA aexp2 ++ [Le]
+compB (EqAexp aexp1 aexp2) = compA aexp1 ++ compA aexp2 ++ [Equ]
+compB (EqBexo bexp1 bexp2) = compB bexp1 ++ compB bexp2 ++ [Equ]
+compB (Notexp bexp) = compB bexp ++ [Neg]
+compB (Andexp bexp1 bexp2) = compB bexp1 ++ compB bexp2 ++ [And]
 
 compile :: Program -> Code
 compile [] = []
 compile ((Storexp var aexp): restProgram) = compA aexp ++ [Store var] ++ compile restProgram
+compile ((Ifexp bexp code1 code2): restProgram) = compB bexp ++ [Branch (compile code1) (compile code2)] ++ compile restProgram
 
 
 parseVarPar :: [Token] -> Maybe (Aexp, [Token])
@@ -142,7 +151,6 @@ parseAexp tokens =
   case parseAddSub tokens of
     Just (expr, []) -> expr
     _ -> error "Parse error"
-
 
 data Bexp
   = Trueexp | Falseexp | Leexp Aexp Aexp | EqAexp Aexp Aexp | EqBexo Bexp Bexp | Notexp Bexp | Andexp Bexp Bexp deriving (Show)
@@ -198,14 +206,36 @@ parseBexp tokens =
     Just (expr, []) -> expr
     _ -> error "Parse error"
 
-
-
-
 nextComaPointIndex :: [Token] -> Int
 nextComaPointIndex [] = 2
 nextComaPointIndex [ComaPointTok] = 0
 nextComaPointIndex (ComaPointTok: _) = 0
 nextComaPointIndex (x:xs) = 1 + nextComaPointIndex xs
+
+-- if and else
+elseIndex :: [Token] -> Int -> Int
+elseIndex (OpenTok:xs) number = 1 + (elseIndex xs (number + 1))
+elseIndex (CloseTok:xs) number = 1 + (elseIndex xs (number - 1))
+elseIndex (ElseTok:xs) number 
+  | number == 0 = 0
+  | otherwise = 1 + (elseIndex xs number)
+elseIndex (x:xs) number = 1 + (elseIndex xs number)
+
+thenIndex :: [Token] -> Int -> Int
+thenIndex (OpenTok:xs) number = 1 + (thenIndex xs (number + 1))
+thenIndex (CloseTok:xs) number = 1 + (thenIndex xs (number - 1))
+thenIndex (ThenTok:xs) number 
+  | number == 0 = 0
+  | otherwise = 1 + (thenIndex xs number)
+thenIndex (x:xs) number = 1 + (thenIndex xs number)
+
+endIndex :: [Token] -> Int -> Int
+endIndex (OpenTok:xs) number = 1 + (endIndex xs (number + 1))
+endIndex (CloseTok:xs) number = 1 + (endIndex xs (number - 1))
+endIndex (ComaPointTok:xs) number 
+  | number == 0 = 1
+  | otherwise = 1 + (endIndex xs number)
+endIndex (x:xs) number = 1 + (endIndex xs number)
 
 parseSmt :: [Token] -> Program
 parseSmt [] = []
@@ -215,10 +245,27 @@ parseSmt (VarTok n : PointEquTok : restToken)
   | otherwise = error "Error in parse"
   where index = nextComaPointIndex restToken
 
+parseSmt (IfTok : restToken)
+  | indexThen == 0 = []
+  | length restToken >= indexThen = [Ifexp (parseBexp expThen) (parseSmt expElse) (parseSmt expEnd)] ++ parseSmt ((drop (indexThen + indexElse + indexComa + 2) restToken))
+  | otherwise = error "Error in parse"
+  where
+    indexThen = thenIndex restToken 0
+    expThen = take indexThen restToken
+    indexElse = elseIndex (tail (drop indexThen restToken)) 0
+    expElse = take indexElse (drop indexThen restToken)
+    indexComa = endIndex (tail (drop indexElse (tail (drop indexThen restToken)))) 0
+    expEnd = take indexComa (drop indexElse (tail (drop indexThen restToken)))
+
+parseSmt (ElseTok : OpenTok : restToken) = parseSmt (init restToken) -- tira )
+parseSmt (ThenTok : OpenTok : restToken) = parseSmt restToken
+parseSmt (ElseTok : restToken) = parseSmt (restToken ++ [ComaPointTok])
+parseSmt (ThenTok : restToken) = parseSmt (restToken ++ [ComaPointTok])
+
 parse :: String -> Program
 parse [] = []
 parse text = parseSmt (lexer text)
 
 testParser :: String -> (String, String)
 testParser programCode = (stack2Str stack, state2Str store)
-  where (_,stack,store) = run(compile (parse programCode), createEmptyStack, createEmptyState)
+  where (_,stack,store) = trace (show (compile (parse programCode))) $ run(compile (parse programCode), createEmptyStack, createEmptyState)
