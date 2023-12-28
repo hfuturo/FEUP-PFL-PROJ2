@@ -1,13 +1,15 @@
-module Tests where 
+module Tests where
 import Main (testAssembler, testParser)
 import Lexer (Token)
 import Action
     ( Inst(Equ, Le, Loop, Sub, Mult, Branch, Store, Fetch, Fals, Push,
            Tru, Neg) )
 
-runAssemblerTests :: [Bool]
+type TestResults = Either Bool [Bool]
+
+runAssemblerTests :: TestResults
 runAssemblerTests
-    = results 
+    = if and results then Left True else Right results
     where results = [testAssembler [Push 10,Push 4,Push 3,Sub,Mult] == ("-10","")] ++
                     [testAssembler [Fals,Push 3,Tru,Store "var",Store "a", Store "someVar"] == ("","a=3,someVar=False,var=True")] ++
                     [testAssembler [Fals,Store "var",Fetch "var"] == ("False","var=False")] ++
@@ -26,10 +28,10 @@ runAssemblerTests
 -- yes: testAssembler [Push 1,Push 2,And] == "Run-time error"
 -- yes: testAssembler [Tru,Tru,Store "y", Fetch "x",Tru] == "Run-time error"
 
-runParserTests :: [Bool]
+runParserTests :: TestResults
 runParserTests
-    = results
-    where results = [testParser "x := 5; x := x - 1;" == ("","x=4")] ++ 
+    = if and results then Left True else Right results
+    where results = [testParser "x := 5; x := x - 1;" == ("","x=4")] ++
                     [testParser "if (not True and 2 <= 5 = 3 == 4) then x :=1; else y := 2;" == ("","y=2")] ++
                     [testParser "x := 42; if x <= 43 then x := 1; else (x := 33; x := x+1;);" == ("","x=1")] ++
                     [testParser "x := 42; if x <= 43 then x := 1; else x := 33; x := x+1;" == ("","x=2")] ++
