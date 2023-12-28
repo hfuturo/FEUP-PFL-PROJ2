@@ -88,9 +88,9 @@ type Program = [Stm]
 compA :: Aexp -> Code
 compA (IntVarexp n) = [Push n]
 compA (StringVarexp n) = [Fetch n]
-compA (Addexp e1 e2) = compA e1 ++ compA e2 ++ [Add]
+compA (Addexp e1 e2) = compA e2 ++ compA e1 ++ [Add]
 compA (Subexp e1 e2) = compA e2 ++ compA e1 ++ [Sub]
-compA (Multexp e1 e2) = compA e1 ++ compA e2 ++ [Mult]
+compA (Multexp e1 e2) = compA e2 ++ compA e1 ++ [Mult]
 
 -- compB :: Bexp -> Code
 compB = undefined -- TODO
@@ -159,16 +159,8 @@ parseSmt (VarTok n : PointEquTok : restToken)
 
 parse :: String -> Program
 parse [] = []
-parse text = (parseSmt (lexer text))
-
-
--- To help you test your parser
--- testParser :: String -> (String, String)
--- testParser programCode = (stack2Str stack, store2Str store)
---   where (_,stack,store) = run(compile (parse programCode), createEmptyStack, createEmptyStore)
+parse text = parseSmt (lexer text)
 
 testParser :: String -> (String, String)
 testParser programCode = (stack2Str stack, state2Str store)
   where (_,stack,store) = run(compile (parse programCode), createEmptyStack, createEmptyState)
-
-  
