@@ -83,19 +83,22 @@ data Aexp =
 
 data Stm = 
   Storexp String Aexp deriving (Show)
+type Program = [Stm]
 
 compA :: Aexp -> Code
 compA (IntVarexp n) = [Push n]
 compA (StringVarexp n) = [Fetch n]
-compA (Addexp e1 e2) = compA e1 ++ compA e2 ++ [Add]
-compA (Subexp e1 e2) = compA e1 ++ compA e2 ++ [Sub]
-compA (Multexp e1 e2) = compA e1 ++ compA e2 ++ [Mult]
+compA (Addexp e1 e2) = compA e2 ++ compA e1 ++ [Add]
+compA (Subexp e1 e2) = compA e2 ++ compA e1 ++ [Sub]
+compA (Multexp e1 e2) = compA e2 ++ compA e1 ++ [Mult]
 
 -- compB :: Bexp -> Code
 compB = undefined -- TODO
 
--- compile :: Program -> Code
-compile = undefined  -- TODO
+compile :: Program -> Code
+compile [] = []
+compile ((Storexp var aexp): restProgram) = compA aexp ++ [Store var] ++ compile restProgram
+
 
 parseVarPar :: [Token] -> Maybe (Aexp, [Token])
 parseVarPar (IntTok n : restTokens) = Just (IntVarexp n, restTokens)
@@ -204,19 +207,18 @@ nextComaPointIndex [ComaPointTok] = 0
 nextComaPointIndex (ComaPointTok: _) = 0
 nextComaPointIndex (x:xs) = 1 + nextComaPointIndex xs
 
-parseSmt :: [Token] -> [Aexp]
+parseSmt :: [Token] -> Program
 parseSmt [] = []
-parseSmt tokens
+parseSmt (VarTok n : PointEquTok : restToken)
   | index == 0 = []
-  | length tokens >= index = [parseAexp (take index tokens)] ++ (parseSmt (tail (drop index tokens)))
+  | length restToken >= index = [Storexp n (parseAexp (take index restToken))] ++ parseSmt (tail (drop index restToken))
   | otherwise = error "Error in parse"
-  where 
-    index = nextComaPointIndex tokens
+  where index = nextComaPointIndex restToken
 
---parse :: [Token] -> [Stm]
---parse
+parse :: String -> Program
+parse [] = []
+parse text = parseSmt (lexer text)
 
--- To help you test your parser
---testParser :: String -> (String, String)
---testParser programCode = (stack2Str stack, store2Str store)
-  --where (_,stack,store) = run(compile (parse programCode), createEmptyStack, createEmptyStore)
+testParser :: String -> (String, String)
+testParser programCode = (stack2Str stack, state2Str store)
+  where (_,stack,store) = run(compile (parse programCode), createEmptyStack, createEmptyState)

@@ -1,31 +1,32 @@
 module Lexer where
 import Data.Char (isDigit, digitToInt, isAlpha)
 
-data Token = 
-  PlusTok |
-  MultTok |
-  SubTok |
-  OpenTok |
-  CloseTok |
-  IntTok Integer |  
-  ComaTok | -- ,
-  ComaPointTok | -- ;
-  MoreTok | -- >
-  LessTok | -- <
-  MoreEquTok | -- >=
-  LessEquTok | -- <=
-  DoubleEquTok | -- ==
-  EquTok | -- =
-  PointEquTok | -- :=
-  IfTok | -- if
-  ElseTok | -- else
-  ThenTok | -- then
-  WhileTok | -- while
-  TrueTok |
-  FalseTok |
-  NotTok |  
-  AndTok |
-  VarTok String deriving (Show)
+data Token 
+  = PlusTok        -- +
+  | MultTok        -- *
+  | SubTok         -- -
+  | OpenTok        -- (
+  | CloseTok       -- )
+  | IntTok Integer -- Int
+  | ComaTok        -- ,
+  | ComaPointTok   -- ;
+  | MoreTok        -- >
+  | LessTok        -- <
+  | MoreEquTok     -- >=
+  | LessEquTok     -- <=
+  | DoubleEquTok   -- ==
+  | EquTok         -- =
+  | PointEquTok    -- :=
+  | IfTok          -- if
+  | ElseTok        -- else
+  | ThenTok        -- then
+  | WhileTok       -- while
+  | TrueTok        -- true
+  | FalseTok       -- false
+  | NotTok         -- not
+  | AndTok         -- and
+  | VarTok String 
+  deriving (Show)
 
 lexer :: String -> [Token]
 lexer [] = []
