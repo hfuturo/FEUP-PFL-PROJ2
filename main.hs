@@ -32,9 +32,9 @@ run ((xi:xf), stack, state)
   | isLoop xi =
     run (xf ++ (loopC1Var xi) ++ [Branch ((loopC2Var xi) ++ [xi]) [Noop]], stack, state)
   | isBranch xi && (last stack) == Right "tt" = 
-    run (xf ++ (branchC1Var xi), init stack, state)
+    run ((branchC1Var xi) ++ xf, init stack, state)
   | isBranch xi && (last stack) == Right "ff" = 
-    run (xf ++ (branchC2Var xi), init stack, state)
+    run ((branchC2Var xi) ++ xf, init stack, state)
   | isPush xi =
     run (xf, stack ++ [Left (pushValue xi)], state)
   | show xi == "Noop" = 
@@ -268,4 +268,4 @@ parse text = parseSmt (lexer text)
 
 testParser :: String -> (String, String)
 testParser programCode = (stack2Str stack, state2Str store)
-  where (_,stack,store) = trace (show (compile (parse programCode))) $ run(compile (parse programCode), createEmptyStack, createEmptyState)
+  where (_,stack,store) = run(compile (parse programCode), createEmptyStack, createEmptyState)
