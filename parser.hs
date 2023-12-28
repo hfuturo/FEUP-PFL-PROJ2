@@ -94,6 +94,12 @@ parseB tokens
           Just (expr2, restTokens2) ->
             Just (EqAexp expr1 expr2, restTokens2)
           Nothing -> Nothing
+      Just ((StringVarexp var), (EquTok : restTokens1))
+        -> Just (VarBexp var,(EquTok : restTokens1))
+      Just ((StringVarexp var), (AndTok : restTokens1))
+        -> Just (VarBexp var,(AndTok : restTokens1))
+      Just ((StringVarexp var),[])
+        -> Just (VarBexp var,[])
 
 parseB1 :: [Token] -> Maybe (Bexp, [Token])
 parseB1 (NotTok : restTokens1) =
