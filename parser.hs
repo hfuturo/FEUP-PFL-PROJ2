@@ -198,6 +198,8 @@ parseSmt (ThenTok : OpenTok : restToken) = parseSmt restToken
 parseSmt (DoTok : OpenTok : restToken) = parseSmt (init restToken) -- tira )
 parseSmt (ElseTok : restToken) = parseSmt (restToken ++ [ComaPointTok])
 parseSmt (ThenTok : restToken) = parseSmt (restToken ++ [ComaPointTok])
+parseSmt (OpenTok : restToken) = parseSmt restToken
+parseSmt (CloseTok : restToken) = parseSmt (tail restToken) -- tira )
 
 parse :: String -> Program
 parse [] = []

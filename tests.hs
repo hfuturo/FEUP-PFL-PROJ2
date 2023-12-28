@@ -34,6 +34,7 @@ runParserTests :: TestResults
 runParserTests
     = if and results then Left True else Right (map (+1) (elemIndices False results))
     where results = [testParser "x := 5; x := x - 1;" == ("","x=4")] ++
+                    [testParser "x := 1; (y := 2; z := y+x;);" == ("","x=1,y=2,z=3")] ++
                     [testParser "if (not True and 2 <= 5 = 3 == 4) then x :=1; else y := 2;" == ("","y=2")] ++
                     [testParser "x := 2; if (not True and x <= 5 = 3 == 4) then x :=1; else y := 2;" == ("","x=2,y=2")] ++
                     [testParser "x := True; if (x = True and not False) then y :=1; else y := 2;" == ("","x=True,y=1")] ++
