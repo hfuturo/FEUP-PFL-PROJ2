@@ -129,21 +129,13 @@ nextComaPointIndex (ComaPointTok: _) = 0
 nextComaPointIndex (x:xs) = 1 + nextComaPointIndex xs
 
 -- if and else
-elseIndex :: [Token] -> Int -> Int
-elseIndex (OpenTok:xs) number = 1 + (elseIndex xs (number + 1))
-elseIndex (CloseTok:xs) number = 1 + (elseIndex xs (number - 1))
-elseIndex (ElseTok:xs) number 
-  | number == 0 = 0
-  | otherwise = 1 + (elseIndex xs number)
-elseIndex (x:xs) number = 1 + (elseIndex xs number)
-
-thenIndex :: [Token] -> Int -> Int
-thenIndex (OpenTok:xs) number = 1 + (thenIndex xs (number + 1))
-thenIndex (CloseTok:xs) number = 1 + (thenIndex xs (number - 1))
-thenIndex (ThenTok:xs) number 
-  | number == 0 = 0
-  | otherwise = 1 + (thenIndex xs number)
-thenIndex (x:xs) number = 1 + (thenIndex xs number)
+indexTok :: [Token] -> Token -> Int -> Int
+indexTok (OpenTok:xs) token number = 1 + (indexTok xs token (number + 1))
+indexTok (CloseTok:xs) token number = 1 + (indexTok xs token (number - 1))
+indexTok (ElseTok:_) ElseTok 0 = 0
+indexTok (ThenTok:_) ThenTok 0 = 0
+indexTok (DoTok:_) DoTok 0 = 0
+indexTok (x:xs) token number = 1 + (indexTok xs token number)
 
 endIndex :: [Token] -> Int -> Int
 endIndex (OpenTok:xs) number = 1 + (endIndex xs (number + 1))
@@ -152,14 +144,6 @@ endIndex (ComaPointTok:xs) number
   | number == 0 = 1
   | otherwise = 1 + (endIndex xs number)
 endIndex (x:xs) number = 1 + (endIndex xs number)
-
-doIndex :: [Token] -> Int -> Int
-doIndex (OpenTok:xs) number = 1 + (doIndex xs (number + 1))
-doIndex (CloseTok:xs) number = 1 + (doIndex xs (number - 1))
-doIndex (DoTok:xs) number 
-  | number == 0 = 0
-  | otherwise = 1 + (doIndex xs number)
-doIndex (x:xs) number = 1 + (doIndex xs number)
 
 parseSmt :: [Token] -> Program
 parseSmt [] = []
@@ -174,9 +158,9 @@ parseSmt (IfTok : restToken)
   | length restToken >= indexThen = [Ifexp (parseBexp expThen) (parseSmt expElse) (parseSmt expEnd)] ++ parseSmt ((drop (indexThen + indexElse + indexComa + 2) restToken))
   | otherwise = error "Error in parse"
   where
-    indexThen = thenIndex restToken 0
+    indexThen = indexTok restToken ThenTok 0
     expThen = take indexThen restToken
-    indexElse = elseIndex (tail (drop indexThen restToken)) 0
+    indexElse = indexTok (tail (drop indexThen restToken)) ElseTok 0
     expElse = take indexElse (drop indexThen restToken)
     indexComa = endIndex (tail (drop indexElse (tail (drop indexThen restToken)))) 0
     expEnd = take indexComa (drop indexElse (tail (drop indexThen restToken)))
@@ -186,7 +170,7 @@ parseSmt (WhileTok : restToken)
   | length restToken >= indexDo = [Loopexp (parseBexp expDo) (parseSmt expEnd)] -- ++ parseSmt (drop (indexDo + indexComa + 1) restToken)
   | otherwise = error "Error in parse"
   where
-    indexDo = doIndex restToken 0
+    indexDo = indexTok restToken DoTok 0
     expDo = take indexDo restToken
     indexComa = endIndex (tail (drop indexDo restToken)) 0
     expEnd = take indexComa (drop indexDo restToken)
