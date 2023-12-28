@@ -4,7 +4,7 @@
 -- yes: testAssembler [Push (-20),Tru,Fals] == ("False,True,-20","")
 -- yes: testAssembler [Push (-20),Tru,Tru,Neg] == ("False,True,-20","")
 -- yes: testAssembler [Push (-20),Tru,Tru,Neg,Equ] == ("False,-20","")
--- no: testAssembler [Push (-20),Push (-21), Le] == ("True","")
+-- yes: testAssembler [Push (-20),Push (-21), Le] == ("True","")
 -- yes: testAssembler [Push 5,Store "x",Push 1,Fetch "x",Sub,Store "x"] == ("","x=4")
 -- yes: testAssembler [Push 10,Store "i",Push 1,Store "fact",Loop [Push 1,Fetch "i",Equ,Neg] [Fetch "i",Fetch "fact",Mult,Store "fact",Push 1,Fetch "i",Sub,Store "i"]] == ("","fact=3628800,i=1")
 -- yes: testAssembler [Tru, Branch [Push 10, Push 4, Push 3, Sub, Mult] [Fals, Push 3, Tru, Store "var", Store "a", Store "someVar"]] == ("-10","")

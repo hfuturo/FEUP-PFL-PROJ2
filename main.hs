@@ -59,7 +59,7 @@ run ((xi:xf), stack, state) =
         Equ -> 
           run (xf, take (length stack - 2) stack ++ [(equOperation (last stack) (last (init stack)))],state)
         Le -> 
-          run (xf, take (length stack - 2) stack ++ [(leOperation (last (init stack)) (last stack))],state)
+          run (xf, take (length stack - 2) stack ++ [(leOperation (last stack) (last (init stack)))],state)
         _ -> error "Run-time error"
 
 -- To help you test your assembler
@@ -68,7 +68,6 @@ testAssembler code = (stack2Str stack, state2Str state)
   where (_,stack,state) = run (code, createEmptyStack, createEmptyState)
 
 -- Part 2
-
 compA :: Aexp -> Code
 compA (IntVarexp n) = [Push n]
 compA (StringVarexp n) = [Fetch n]
@@ -79,7 +78,7 @@ compA (Multexp e1 e2) = compA e2 ++ compA e1 ++ [Mult]
 compB :: Bexp -> Code
 compB (Falseexp) = [Fals]
 compB (Trueexp) = [Tru]
-compB (Leexp aexp1 aexp2) = compA aexp1 ++ compA aexp2 ++ [Le]
+compB (Leexp aexp1 aexp2) = compA aexp2 ++ compA aexp1 ++ [Le]
 compB (EqAexp aexp1 aexp2) = compA aexp1 ++ compA aexp2 ++ [Equ]
 compB (EqBexo bexp1 bexp2) = compB bexp1 ++ compB bexp2 ++ [Equ]
 compB (Notexp bexp) = compB bexp ++ [Neg]
