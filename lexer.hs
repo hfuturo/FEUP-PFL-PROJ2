@@ -22,7 +22,9 @@ data Token =
   ThenTok | -- then
   WhileTok | -- while
   TrueTok |
-  FalseTok | 
+  FalseTok |
+  NotTok |  
+  AndTok |
   VarTok String deriving (Show)
 
 lexer :: String -> [Token]
@@ -52,6 +54,9 @@ lexer ('t' : 'h' : 'e' : 'n' : restStr)       = ThenTok : lexer restStr
 lexer ('w' : 'h' : 'i' : 'l' : 'e' : restStr) = WhileTok : lexer restStr
 lexer ('T' : 'r' : 'u' : 'e' : restStr)       = TrueTok : lexer restStr
 lexer ('F' : 'a' : 'l' : 's' : 'e' : restStr) = FalseTok : lexer restStr
+lexer ('n' : 'o' : 't' : restStr)             = NotTok : lexer restStr
+lexer ('a' : 'n' : 'd' : restStr)             = AndTok : lexer restStr
+
 
 lexer (chr : string)
   | isDigit chr = (IntTok (read digitStr)) : lexer restDigitStr
