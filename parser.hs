@@ -87,7 +87,7 @@ parseBoolPar (TrueTok : restTokens) = Just (TrueBexp, restTokens)
 parseBoolPar (FalseTok : restTokens) = Just (FalseBexp, restTokens)
 parseBoolPar (OpenTok : restTokens1)
   | parTok restTokens1 1 =
-    case parseAndEq restTokens1 of
+    case parseAnd restTokens1 of
       Just (expr, CloseTok : restTokens2) ->
         Just (expr, restTokens2)
       Just (expr, []) -> Just (expr, [])
@@ -126,17 +126,23 @@ parseNot (NotTok : restTokens1) =
     result -> result
 parseNot tokens = parseBoolPar tokens
 
--- Bexp : deal with and and equal operations
-parseAndEq :: [Token] -> Maybe (Bexp, [Token])
-parseAndEq tokens =
+-- Bexp : deal with equal operations
+parseEq :: [Token] -> Maybe (Bexp, [Token])
+parseEq tokens =
   case parseNot tokens of
     Just (expr1, EquTok : restTokens1) ->
-      case parseAndEq restTokens1 of
+      case parseAnd restTokens1 of
         Just (expr2, restTokens2) ->
            Just (EqBBexp expr1 expr2, restTokens2)
         Nothing -> Nothing
+    result -> result
+
+-- Bexp : deal with and operations
+parseAnd :: [Token] -> Maybe (Bexp, [Token])
+parseAnd tokens =
+  case parseEq tokens of
     Just (expr1, AndTok : restTokens1) ->
-      case parseAndEq restTokens1 of
+      case parseAnd restTokens1 of
         Just (expr2, restTokens2) ->
           Just (AndBexp expr1 expr2, restTokens2)
         Nothing -> Nothing
@@ -145,7 +151,7 @@ parseAndEq tokens =
 -- Parses a list of Tokens that represent a boolean expression
 parseBexp :: [Token] -> Bexp
 parseBexp tokens =
-  case parseAndEq tokens of
+  case parseAnd tokens of
     Just (expr, []) -> expr
     Just (expr, rest) -> error "Parse error rest" 
     _ -> error "Parse error bexp"
