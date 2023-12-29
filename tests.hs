@@ -58,4 +58,5 @@ runParserTests
                     [testParser "x := True; if ((x) = True and not False) then y :=1; else y := 2;" == ("","x=True,y=1")] ++
                     [testParser "x := True; if ((x and False) = True and not False) then y :=1; else y := 2;" == ("","x=True,y=2")] ++
                     [testParser "x := 2; if ((x+2)*2 == 8 = True and not False) then y :=1; else y := 2;" == ("","x=2,y=1")] ++
-                    [testParser "i := 10; fact := 1; while (not(i == 1)) do (fact := fact * i; i := i - 1;);" == ("","fact=3628800,i=1")]
+                    [testParser "i := 10; fact := 1; while (not(i == 1)) do (fact := fact * i; i := i - 1;);" == ("","fact=3628800,i=1")] ++
+                    [testParser "i := 10; fact := 1; while (not(i == 1)) do (fact := fact * i; i := i - 1;);i:=i+1;" == ("","fact=3628800,i=2")]
