@@ -85,11 +85,13 @@ parseAexp tokens =
 parseBoolPar :: [Token] -> Maybe (Bexp, [Token])
 parseBoolPar (TrueTok : restTokens) = Just (TrueBexp, restTokens)
 parseBoolPar (FalseTok : restTokens) = Just (FalseBexp, restTokens)
-parseBoolPar (OpenTok : restTokens1) =
-  case parseAndEq restTokens1 of
-    Just (expr, CloseTok : restTokens2) ->
-      Just (expr, restTokens2)
-    _ -> Nothing
+parseBoolPar (OpenTok : restTokens1)
+  | parTok restTokens1 1 =
+    case parseAndEq restTokens1 of
+      Just (expr, CloseTok : restTokens2) ->
+        Just (expr, restTokens2)
+      Just (expr, []) -> Just (expr, [])
+      _ -> Nothing
 
 -- case that bool has aritmetic expression within
 parseBoolPar tokens
@@ -107,6 +109,10 @@ parseBoolPar tokens
       Just (VarAexp var, EquTok : restTokens1)
         -> Just (VarBexp var,EquTok : restTokens1)
       Just (VarAexp var, AndTok : restTokens1)
+        -> Just (VarBexp var,AndTok : restTokens1)
+      Just (VarAexp var, CloseTok : EquTok : restTokens1)
+        -> Just (VarBexp var,EquTok : restTokens1)
+      Just (VarAexp var, CloseTok : AndTok : restTokens1)
         -> Just (VarBexp var,AndTok : restTokens1)
       Just (VarAexp var,[])
         -> Just (VarBexp var,[])
@@ -141,7 +147,8 @@ parseBexp :: [Token] -> Bexp
 parseBexp tokens =
   case parseAndEq tokens of
     Just (expr, []) -> expr
-    _ -> error "Parse error"
+    Just (expr, rest) -> error "Parse error rest" 
+    _ -> error "Parse error bexp"
 
 -- search for the next coma to seperate Stm
 nextComaPointIndex :: [Token] -> Int
@@ -152,6 +159,7 @@ nextComaPointIndex (x:xs) = 1 + nextComaPointIndex xs
 
 -- search for index of a specific Token in a independent code block (that is why we check the number of "(" and ")")
 indexTok :: [Token] -> Token -> Int -> Int
+indexTok [] token number = 0
 indexTok (OpenTok:xs) token number = 1 + indexTok xs token (number + 1)
 indexTok (CloseTok:xs) token number = 1 + indexTok xs token (number - 1)
 indexTok (ElseTok:_) ElseTok 0 = 0
@@ -176,6 +184,18 @@ checkBool (FalseTok:_) = True
 checkBool (LessEquTok:_) = True
 checkBool (DoubleEquTok:_) = True
 checkBool (x:xs) = checkBool xs
+
+parTok :: [Token] -> Int -> Bool
+parTok [] number = False
+parTok (OpenTok:xs) number = parTok xs (number + 1)
+parTok (CloseTok:xs) number
+  | (number-1) == 0 = False
+  | otherwise = parTok xs (number - 1)
+parTok (TrueTok:_) number = True
+parTok (FalseTok:_) number = True
+parTok (LessEquTok:_) number = True
+parTok (DoubleEquTok:_) number = True
+parTok (x:xs) number = parTok xs number
 
 -- Converts the list of Tokens given by lexer into a list of Stm ready to be used by the compiler
 parseStm :: [Token] -> Program
