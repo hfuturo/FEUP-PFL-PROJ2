@@ -221,7 +221,7 @@ parseStm (IfTok : restToken)
 
 parseStm (WhileTok : restToken)
   | indexDo == 0 = []
-  | length restToken >= indexDo = [LoopStm (parseBexp expDo) (parseStm expEnd)] -- ++ parseStm (drop (indexDo + indexComa + 1) restToken)
+  | length restToken >= indexDo = [LoopStm (parseBexp expDo) (parseStm expEnd)] ++ parseStm (drop (indexDo + indexComa + 1) restToken)
   | otherwise = error "Error in parse"
   where
     indexDo = indexTok restToken DoTok 0

@@ -37,7 +37,7 @@ run (xi:xf, stack, state) =
           | last stack == Right "ff" -> run (c2 ++ xf, init stack, state)
           | otherwise -> error "Run-time error"
         Loop c1 c2 ->
-          run (xf ++ c1 ++ [Branch (c2 ++ [xi]) [Noop]], stack, state)
+          run (c1 ++ [Branch (c2 ++ [xi]) [Noop]] ++ xf, stack, state)
         Push val ->
           run (xf, stack ++ [Left val], state)
         Noop ->
