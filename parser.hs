@@ -90,7 +90,6 @@ parseBoolPar (OpenTok : restTokens1)
     case parseAnd restTokens1 of
       Just (expr, CloseTok : restTokens2) ->
         Just (expr, restTokens2)
-      Just (expr, []) -> Just (expr, [])
       _ -> Nothing
 
 -- case that bool has aritmetic expression within
@@ -153,7 +152,6 @@ parseBexp :: [Token] -> Bexp
 parseBexp tokens =
   case parseAnd tokens of
     Just (expr, []) -> expr
-    Just (expr, rest) -> error "Parse error rest" 
     _ -> error "Parse error bexp"
 
 -- search for the next coma to seperate Stm
