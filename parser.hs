@@ -131,7 +131,7 @@ parseEq :: [Token] -> Maybe (Bexp, [Token])
 parseEq tokens =
   case parseNot tokens of
     Just (expr1, EquTok : restTokens1) ->
-      case parseAnd restTokens1 of
+      case parseEq restTokens1 of
         Just (expr2, restTokens2) ->
            Just (EqBBexp expr1 expr2, restTokens2)
         Nothing -> Nothing
