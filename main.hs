@@ -109,5 +109,5 @@ compile ((LoopStm bexp code): restProgram) = Loop (compB bexp) (compile code) : 
 
 -- To help you test your parser
 testParser :: String -> (String, String)
-testParser programCode = (stack2Str stack, state2Str store)
-  where (_,stack,store) = run (compile (parse programCode), createEmptyStack, createEmptyState)
+testParser programCode = (stack2Str stack, state2Str state)
+  where (_,stack,state) = run (compile (parse programCode), createEmptyStack, createEmptyState)
