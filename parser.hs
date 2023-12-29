@@ -109,10 +109,6 @@ parseBoolPar tokens
         -> Just (VarBexp var,EquTok : restTokens1)
       Just (VarAexp var, AndTok : restTokens1)
         -> Just (VarBexp var,AndTok : restTokens1)
-      Just (VarAexp var, CloseTok : EquTok : restTokens1)
-        -> Just (VarBexp var,EquTok : restTokens1)
-      Just (VarAexp var, CloseTok : AndTok : restTokens1)
-        -> Just (VarBexp var,AndTok : restTokens1)
       Just (VarAexp var,[])
         -> Just (VarBexp var,[])
 
